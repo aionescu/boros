@@ -1,0 +1,13 @@
+cradle:
+  cabal:
+    - path: "src/Syntax.hs"
+      component: "fcc:exe:fcc"
+
+    - path: "src/Preprocess.hs"
+      component: "fcc:exe:fcc"
+
+    - path: "src/Parser.hs"
+      component: "fcc:exe:fcc"
+
+    - path: "src/Main.hs"
+      component: "fcc:exe:fcc"

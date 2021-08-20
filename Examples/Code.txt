@@ -1,0 +1,10 @@
+let f(x) = x + 1 in
+
+let x = 2 {- + 1 + 1 -} in
+
+if x < 100 then
+  comments[0] += "+ 1"
+else
+  ()
+;
+print(x)
