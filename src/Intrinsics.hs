@@ -9,6 +9,7 @@ import Data.IORef (newIORef, readIORef)
 import System.IO.Unsafe (unsafePerformIO)
 import Data.Typeable (Typeable, typeRep, Proxy (Proxy))
 import Data.Function (fix)
+import Text.Read (readMaybe)
 
 class ToVal a where
   toVal :: a -> Val
@@ -112,6 +113,12 @@ plus (Str a) (Str b) = pure $ pure $ Str $ a ++ b
 plus (List a) (List b) = pure . List <$> (newIORef =<< (++) <$> readIORef a <*> readIORef b)
 plus _ _ = pure $ Left ""
 
+read' :: String -> Either EvalError Val
+read' s =
+  case readMaybe s of
+    Nothing -> Left "Ill-formatted string in `read`."
+    Just v -> pure v
+
 intrinsics :: Map Ident Val
 intrinsics =
   M.fromList
@@ -144,4 +151,7 @@ intrinsics =
   , (">", toVal $ ((== GT) <$>) ... compareVal)
   , ("<=", toVal $ ((/= GT) <$>) ... compareVal)
   , (">=", toVal $ ((/= LT) <$>) ... compareVal)
+
+  , ("show", toVal $ show @Val)
+  , ("read", toVal read')
   ]

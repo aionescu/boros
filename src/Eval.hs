@@ -30,7 +30,7 @@ _ !? _ = Nothing
 
 replaceAt :: (Num i, Ord i) => [a] -> i -> a -> Maybe [a]
 replaceAt (_ : as) 0 v = Just $ v : as
-replaceAt (a : as) i v | i > 0 = (a :) <$> replaceAt as i v
+replaceAt (a : as) i v | i > 0 = (a :) <$> replaceAt as (i - 1) v
 replaceAt _ _ _ = Nothing
 
 ref :: MonadIO m => a -> m (IORef a)
@@ -130,7 +130,7 @@ eval' (Assign (Index e i) v) = do
           l <- liftIO $ readIORef l'
           case replaceAt l n v' of
             Just newL -> liftIO (writeIORef l' newL) $> Unit
-            Nothing -> throwError "Index out of range."
+            Nothing -> throwError "Index out of range in Assign Index."
         _ -> throwError "Non-number index in Assign Index."
     _ -> throwError "Non-array LHS in Assign Index."
 

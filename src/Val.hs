@@ -2,7 +2,7 @@ module Val where
 
 import Data.Map.Lazy(Map)
 import qualified Data.Map.Lazy as M
-import Data.IORef(IORef, readIORef)
+import Data.IORef(IORef, readIORef, newIORef)
 import Data.Char (toLower)
 import System.IO.Unsafe (unsafePerformIO)
 import Data.List (intercalate)
@@ -12,6 +12,10 @@ import Unsafe.Coerce (unsafeCoerce)
 import Data.Void (Void)
 import Data.Typeable (Typeable)
 import GHC.Base (reallyUnsafePtrEquality#)
+import Parser
+import Text.Parsec (getInput, parse, choice, try)
+import Data.Foldable (toList)
+import Data.Functor (($>))
 
 data Val
   = Unit
@@ -116,3 +120,30 @@ valType Str{} = "Str"
 valType List{} = "List"
 valType Rec{} = "Rec"
 valType Fn{} = "Fn"
+
+unitVal :: Parser Val
+unitVal = unit $> Unit
+
+numVal :: Parser Val
+numVal = Num <$> intRaw
+
+boolVal :: Parser Val
+boolVal = Bool <$> boolRaw
+
+strVal :: Parser Val
+strVal = Str <$> strRaw
+
+listVal :: Parser Val
+listVal = list (List . unsafePerformIO . newIORef) pVal
+
+recVal :: Parser Val
+recVal = rec' (Rec . unsafePerformIO . newIORef . M.fromList) pVal
+
+pVal :: Parser Val
+pVal = choice $ try <$> [recVal, listVal, strVal, boolVal, numVal, unitVal]
+
+withRest :: Parser a -> Parser (a, String)
+withRest p = (,) <$> p <*> getInput
+
+instance Read Val where
+  readsPrec _ = toList . parse (withRest pVal) ""

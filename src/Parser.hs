@@ -25,10 +25,11 @@ ws = spaces
 parens :: Char -> Char -> Parser a -> Parser a
 parens begin end = between (char begin *> ws) (char end *> ws)
 
+unit :: Parser Expr
+unit = char '(' *> ws <* char ')' <* ws $> UnitLit
+
 parensExpr :: Parser Expr
 parensExpr = try unit <|> parens '(' ')' exprFull
-  where
-    unit = char '(' *> ws <* char ')' <* ws $> UnitLit
 
 number :: (Read a, Num a) => Parser a
 number = read <$> many1 digit
@@ -72,13 +73,13 @@ str = StrLit <$> strRaw
 simpleLit :: Parser Expr
 simpleLit = choice [try str, try num, bool]
 
-listLit :: Parser Expr
-listLit = parens '[' ']' $ ListLit <$> expr `sepEndBy` comma
+list :: ([a] -> a) -> Parser a -> Parser a
+list mk el = parens '[' ']' $ mk <$> el `sepEndBy` comma
 
-recLit :: Parser Expr
-recLit = RecLit <$> parens '{' '}' (unique =<< field `sepEndBy` comma)
+rec' :: ([(Ident, a)] -> a) -> Parser a -> Parser a
+rec' mk el = mk <$> parens '{' '}' (unique =<< field `sepEndBy` comma)
   where
-    field = (,) <$> (ident <* ws) <*> (equals *> expr <* ws)
+    field = (,) <$> (ident <* ws) <*> (equals *> el <* ws)
     unique es =
       let es' = fst <$> es
       in
@@ -127,7 +128,7 @@ lam :: Parser Expr
 lam = unrollLam <$> (many1 ident <* string "->" <* ws) <*> exprNoSeq
 
 exprNoMember :: Parser Expr
-exprNoMember = choice (try <$> [if', lam, recLit, listLit, simpleLit, var, parensExpr]) <* ws
+exprNoMember = choice (try <$> [if', lam, rec' RecLit expr, list ListLit expr, simpleLit, var, parensExpr]) <* ws
 
 member :: Parser Expr -> Parser Expr
 member lhs = foldl' unroll <$> lhs <*> many (char '.' *> (Left <$> index <|> Right <$> ident) <* ws)

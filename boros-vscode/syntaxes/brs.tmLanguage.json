@@ -31,7 +31,7 @@
     "intrinsics": {
       "patterns": [{
         "name": "support.function.brs",
-        "match": "\\b(halt|fix|print|not|truthy|type|compare)\\b"
+        "match": "\\b(halt|fix|print|not|truthy|type|compare|show|read)\\b"
       }]
     },
     "comments": {
