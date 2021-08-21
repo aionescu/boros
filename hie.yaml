@@ -9,6 +9,9 @@ cradle:
     - path: "src/Parser.hs"
       component: "fcc:exe:fcc"
 
+    - path: "src/Val.hs"
+      component: "fcc:exe:fcc"
+
     - path: "src/Eval.hs"
       component: "fcc:exe:fcc"
 

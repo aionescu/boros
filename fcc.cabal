@@ -21,6 +21,7 @@ executable fcc
     Syntax
     Preprocess
     Parser
+    Val
     Eval
     Paths_fcc
 
@@ -32,6 +33,7 @@ executable fcc
   build-depends:
     base >=4.13 && <5
     , containers ^>= 0.6.2
+    , unordered-containers ^>= 0.2.14
     , mtl ^>= 2.2.2
     , optparse-applicative ^>= 0.16.1
     , parsec ^>= 3.1.14

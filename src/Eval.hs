@@ -1,49 +1,14 @@
 module Eval where
 
-import Syntax
-import Control.Monad.Except (MonadError, throwError, ExceptT, runExceptT, liftEither)
-import Data.Map(Map)
+import Control.Monad.Except (throwError, ExceptT, runExceptT, liftEither)
 import qualified Data.Map as M
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Data.IORef(IORef, newIORef, readIORef, writeIORef)
 import Control.Monad.Reader (MonadReader (ask, local), asks, ReaderT, runReaderT)
 import Data.Functor (($>))
-import Data.Char (toLower)
-import System.IO.Unsafe (unsafePerformIO)
-import Data.List (intercalate)
 
-data Val
-  = UnitVal
-  | NumVal Integer
-  | BoolVal Bool
-  | StrVal String
-  | ArrayVal (IORef [Val])
-  | RecVal (IORef (Map Ident Val))
-  | LamVal Env Ident Expr
-
-showArr :: [Val] -> String
-showArr a = "[" ++ intercalate ", " (show <$> a) ++ "]"
-
-showField :: Ident -> Val -> String
-showField f v = f ++ " = " ++ show v
-
-showRec :: Map Ident Val -> String
-showRec m
-  | M.null m = "{ }"
-  | otherwise = "{ " ++ intercalate ", " (uncurry showField <$> M.toList m) ++ " }"
-
-instance Show Val where
-  show UnitVal = "()"
-  show (NumVal n) = show n
-  show (BoolVal b) = toLower <$> show b
-  show (StrVal s) = show s
-  show (ArrayVal a) = unsafePerformIO $ showArr <$> readIORef a
-  show (RecVal r) = unsafePerformIO $ showRec <$> readIORef r
-  show LamVal{} = "<λ>"
-
-type Env = Map Ident Val
-type EvalError = String
-type MonadEval m = (MonadError EvalError m, MonadReader Env m, MonadIO m)
+import Syntax
+import Val
 
 (!?) :: (Num i, Ord i) => [a] -> i -> Maybe a
 (a : _) !? 0 = Just a
@@ -60,15 +25,6 @@ ref = liftIO . newIORef
 
 unref :: MonadIO m => IORef a -> m a
 unref = liftIO . readIORef
-
-truthy :: MonadEval m => Val -> m Bool
-truthy UnitVal = pure True -- Is () truthy?
-truthy (NumVal n) = pure $ n /= 0
-truthy (BoolVal b) = pure b
-truthy (StrVal s) = pure $ not $ null s
-truthy (ArrayVal a) = liftIO $ not . null <$> readIORef a
-truthy (RecVal r) = liftIO $ not . M.null <$> readIORef r
-truthy LamVal{} = pure True -- Lambdas are truthy in Python so...
 
 eval' :: MonadEval m => Expr -> m Val
 eval' (NumLit n) = pure $ NumVal n

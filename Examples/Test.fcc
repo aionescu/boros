@@ -1,2 +1,4 @@
-let f x = [x] in
-f 2
+let a = { } in
+let b = { a = a } in
+a.b <- b;
+a
