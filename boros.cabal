@@ -1,11 +1,11 @@
 cabal-version: 2.0
 
-name: fcc
+name: boros
 version: 0.0.0.0
-synopsis: Dynamically-typed purely functional programming language
-description: Please see the README on GitHub at <https://github.com/aionescu/fcc#readme>
-homepage: https://github.com/aionescu/fcc#readme
-bug-reports: https://github.com/aionescu/fcc/issues
+synopsis: Small programming language
+description: Please see the README on GitHub at <https://github.com/aionescu/boros#readme>
+homepage: https://github.com/aionescu/boros#readme
+bug-reports: https://github.com/aionescu/boros/issues
 license: GPL-3
 license-file: LICENSE.txt
 maintainer: alxi.2001@gmail.com
@@ -14,7 +14,7 @@ category: Interpreter
 build-type: Simple
 extra-source-files: README.md
 
-executable fcc
+executable boros
   main-is: Main.hs
 
   other-modules:
@@ -24,10 +24,10 @@ executable fcc
     Val
     Intrinsics
     Eval
-    Paths_fcc
+    Paths_boros
 
   autogen-modules:
-    Paths_fcc
+    Paths_boros
 
   hs-source-dirs: src
 

@@ -1,22 +1,22 @@
 cradle:
   cabal:
     - path: "src/Syntax.hs"
-      component: "fcc:exe:fcc"
+      component: "boros:exe:boros"
 
     - path: "src/Preprocess.hs"
-      component: "fcc:exe:fcc"
+      component: "boros:exe:boros"
 
     - path: "src/Parser.hs"
-      component: "fcc:exe:fcc"
+      component: "boros:exe:boros"
 
     - path: "src/Val.hs"
-      component: "fcc:exe:fcc"
+      component: "boros:exe:boros"
 
     - path: "src/Intrinsics.hs"
-      component: "fcc:exe:fcc"
+      component: "boros:exe:boros"
 
     - path: "src/Eval.hs"
-      component: "fcc:exe:fcc"
+      component: "boros:exe:boros"
 
     - path: "src/Main.hs"
-      component: "fcc:exe:fcc"
+      component: "boros:exe:boros"
