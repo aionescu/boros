@@ -1,26 +1,32 @@
 module Syntax where
 
-type Ident = String
+import Text.PrettyPrint.GenericPretty
 
-data Val
-  = NumVal Integer
-  | BoolVal Bool
-  | StrVal String
-  | ArrayVal [Val]
-  | UnitVal
+type Ident = String
 
 data Expr
   = NumLit Integer
   | BoolLit Bool
   | StrLit String
   | UnitLit
-  | BinOp Expr String Expr
-  | FunCall Ident [Expr]
+  | ArrayLit [Expr]
+  | RecLit [(Ident, Expr)]
+  | RecMember Expr Ident
+  | Index Expr Expr
   | Var Ident
   | Let Ident Expr Expr
-  | LetFn Ident [Ident] Expr Expr
-  | Assign Ident [Expr] Expr
+  | Lam Ident Expr
+  | App Expr Expr
+  | And Expr Expr
+  | Or Expr Expr
+  | Assign Expr Expr
   | If Expr Expr Expr
-  | While Expr Expr
   | Seq Expr Expr
-  | Index Expr Expr
+  deriving stock Generic
+  deriving anyclass Out
+
+showExpr :: Expr -> String
+showExpr = pretty
+
+printExpr :: Expr -> IO ()
+printExpr = pp

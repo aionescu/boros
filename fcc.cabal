@@ -21,6 +21,7 @@ executable fcc
     Syntax
     Preprocess
     Parser
+    Eval
     Paths_fcc
 
   autogen-modules:
@@ -35,6 +36,7 @@ executable fcc
     , optparse-applicative ^>= 0.16.1
     , parsec ^>= 3.1.14
     , split ^>= 0.2.3
+    , GenericPretty ^>= 1.2.2
 
   ghc-options:
     -threaded
