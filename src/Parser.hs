@@ -10,10 +10,10 @@ import Syntax
 type Parser = Parsec String ()
 
 reserved :: [String]
-reserved = ["let", "in", "if", "then", "else", "true", "false", "and", "or"]
+reserved = ["let", "and", "in", "if", "then", "else", "true", "false"]
 
 reservedOps :: [String]
-reservedOps = ["=", "->", "<-", "."]
+reservedOps = ["=", "->", "<-", ".", "||", "&&"]
 
 comma, colon, equals, shebang, ws :: Parser ()
 comma = ws <* char ',' <* ws
@@ -170,30 +170,28 @@ op cs = binOp <$> try (opIdentWith cs <* ws)
 exprOps :: Parser Expr
 exprOps = foldl' (\p (o, a) -> chain a p $ op o) exprApp precedenceTable
 
-opAndOr :: Parser (Expr -> Expr -> Expr)
-opAndOr =
-  choice
-  [ string "and" $> And
-  , string "or" $> Or
-  ]
-  <* ws
+exprAnd :: Parser Expr
+exprAnd = chainr1 exprOps $ string "&&" *> ws $> And
 
-exprLogic :: Parser Expr
-exprLogic = chainr1 exprOps opAndOr
+exprOr :: Parser Expr
+exprOr = chainr1 exprAnd $ string "||" *> ws $> Or
 
-unrollLet :: Ident -> [Ident] -> Expr -> Expr -> Expr
-unrollLet i args v = Let i (unrollLam args v)
+expr :: Parser Expr
+expr = exprOr
+
+binding :: Parser (Ident, Expr)
+binding = unrollBinding <$> ident <*> many ident <*> (equals *> exprFull <* ws)
+  where
+    unrollBinding i is e = (i, unrollLam is e)
+
+bindingGroup :: Parser [(Ident, Expr)]
+bindingGroup = binding `sepBy` (string "and" *> ws)
 
 let' :: Parser Expr
 let' =
-  unrollLet
-  <$> (string "let" *> ws *> ident)
-  <*> many ident
-  <*> (equals *> exprNoSeq <* ws)
+  Let
+  <$> (string "let" *> ws *> bindingGroup)
   <*> (string "in" *> ws *> exprFull)
-
-expr :: Parser Expr
-expr = exprLogic
 
 assign :: Parser Expr
 assign = Assign <$> (exprMember <* ws <* string "<-" <* ws) <*> exprNoSeq

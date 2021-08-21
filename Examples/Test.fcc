@@ -1,4 +1,3 @@
-let a = { } in
-let b = { a = a } in
-a.b <- b;
-a
+let f x = g x
+and g x = [x] in
+f 2

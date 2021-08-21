@@ -13,6 +13,7 @@ import Data.List (intercalate)
 import Syntax
 import Unsafe.Coerce (unsafeCoerce)
 import Data.Void (Void)
+import Control.Monad.Fix (MonadFix)
 
 data Val
   = UnitVal
@@ -25,7 +26,7 @@ data Val
 
 type Env = Map Ident Val
 type EvalError = String
-type MonadEval m = (MonadError EvalError m, MonadReader Env m, MonadIO m)
+type MonadEval m = (MonadError EvalError m, MonadReader Env m, MonadIO m, MonadFix m)
 
 type SeenVals = [IORef Void]
 
@@ -43,7 +44,7 @@ showRec seen m
 guardCycle :: SeenVals -> IORef a -> IO String -> String
 guardCycle seen r s =
   if unsafeCoerce r `elem` seen
-  then "<cycle>"
+  then "<∞>"
   else unsafePerformIO s
 
 addSeen :: IORef a -> SeenVals -> SeenVals

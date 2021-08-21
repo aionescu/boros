@@ -14,7 +14,7 @@ data Expr
   | RecMember Expr Ident
   | Index Expr Expr
   | Var Ident
-  | Let Ident Expr Expr
+  | Let [(Ident, Expr)] Expr
   | Lam Ident Expr
   | App Expr Expr
   | And Expr Expr

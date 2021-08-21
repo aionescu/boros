@@ -65,9 +65,9 @@ eval' (Var i) = do
     Just v -> pure v
     Nothing -> throwError $ "Variable " ++ show i ++ " not defined."
 
-eval' (Let i v e) = do
-  v' <- eval' v
-  local (M.insert i v') $ eval' e
+eval' (Let bs e) = mdo
+  vs <- local (M.union vs) $ traverse eval' $ M.fromList bs
+  local (M.union vs) $ eval' e
 
 eval' (Lam i e) = do
   env <- ask
