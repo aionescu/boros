@@ -11,6 +11,8 @@ import Data.Functor (($>))
 import Syntax
 import Val
 import Intrinsics
+import Preprocess (Comment)
+import Data.Bifunctor (second)
 
 type Env = Map Ident Val
 type EvalCtx = ReaderT Env (ExceptT EvalError IO)
@@ -77,8 +79,18 @@ eval' (Var i) = do
     Nothing -> throwError $ "Variable " ++ show i ++ " not defined."
 
 eval' (Let bs e) = mdo
-  vs <- local (M.union vs) $ traverse eval' $ M.fromList bs
-  local (M.union vs) $ eval' e
+  let
+    isLam Lam{} = True
+    isLam _ = False
+
+    fs = filter (isLam . snd) bs
+    vs = filter (not . isLam . snd) bs
+
+  fs' <- local (M.union fs') $ traverse eval' $ M.fromList fs
+
+  local (M.union fs') do
+      vs' <- traverse eval' $ M.fromList vs
+      local (M.union vs') $ eval' e
 
 eval' (Lam i e) = do
   env <- ask
@@ -145,3 +157,11 @@ eval' (Seq a b) = eval' a *> eval' b
 
 eval :: Expr -> IO (Either EvalError Val)
 eval = runEval intrinsics . eval'
+
+evalWithComments :: [Comment] -> Expr -> IO (Either EvalError ([Comment], Val))
+evalWithComments comms expr = do
+  commsVal@(List commsRef) <- pure $ toVal comms
+
+  v <- runEval (M.insert "comments" commsVal intrinsics) $ eval' expr
+  Just (newComms :: [Comment]) <- traverse ofVal <$> readIORef commsRef
+  pure $ second (newComms,) v

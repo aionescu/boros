@@ -103,14 +103,25 @@ unErr f v = case unsafePerformIO $ f v of
 fixVal :: (Val -> IO (Either EvalError Val)) -> Val
 fixVal = fix . unErr
 
+halt :: () -> Either EvalError Val
+halt _ = Left "Halt"
+
+plus :: Val -> Val -> IO (Either EvalError Val)
+plus (Num a) (Num b) = pure $ pure $ Num $ a + b
+plus (Str a) (Str b) = pure $ pure $ Str $ a ++ b
+plus (List a) (List b) = pure . List <$> (newIORef =<< (++) <$> readIORef a <*> readIORef b)
+plus _ _ = pure $ Left ""
+
 intrinsics :: Map Ident Val
 intrinsics =
   M.fromList
-  [ ("fix", toVal fixVal)
+  [ ("halt", toVal halt)
+  , ("fix", toVal fixVal)
+
   , ("print", toVal $ print @Val)
   , ("not", toVal not)
 
-  , ("+", toVal $ (+) @Integer)
+  , ("+", toVal plus)
   , ("-", toVal $ (-) @Integer)
   , ("*", toVal $ (*) @Integer)
   , ("/", toVal $ quot @Integer)

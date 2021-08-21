@@ -20,12 +20,21 @@ postComment = try $ manyTill anyChar eof
 comments :: Parser [Comment]
 comments = many (preComment *> comment) <* postComment
 
-codes :: Parser [Code]
-codes = (\l a -> l ++ [a]) <$> many (preComment <* comment) <*> postComment
+codeBlocks :: Parser [Code]
+codeBlocks = (\l a -> l ++ [a]) <$> many (preComment <* comment) <*> postComment
 
 parse :: Parser a -> String -> Either String a
 parse p = first show . runParser p () ""
 
+appendComm :: String -> String -> String
+appendComm comm code = "{-" ++ comm ++ "-}" ++ code
+
+applyComms' :: (String -> String -> String) -> [Comment] -> [Code] -> Code
+applyComms' append comms (c : cs) = concat $ c : zipWith append comms cs
+applyComms' _ _ _ = error "applyComments"
+
 applyComments :: [Comment] -> [Code] -> Code
-applyComments comms (c : cs) = concat $ c : zipWith (++) comms cs
-applyComments _ _ = error "applyComments"
+applyComments = applyComms' appendComm
+
+inlineComments :: [Comment] -> [Code] -> Code
+inlineComments = applyComms' (++)
