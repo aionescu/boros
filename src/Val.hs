@@ -10,8 +10,6 @@ import Data.Char (toLower)
 import System.IO.Unsafe (unsafePerformIO)
 import Data.List (intercalate)
 
-import qualified GHC.Exts as E
-
 import Syntax
 import Unsafe.Coerce (unsafeCoerce)
 import Data.Void (Void)
