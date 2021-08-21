@@ -1,7 +1,8 @@
 module Eval where
 
 import Control.Monad.Except (throwError, ExceptT, runExceptT, liftEither)
-import qualified Data.Map as M
+import Data.Map.Lazy(Map)
+import qualified Data.Map.Lazy as M
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Data.IORef(IORef, newIORef, readIORef, writeIORef)
 import Control.Monad.Reader (MonadReader (ask, local), asks, ReaderT, runReaderT)
@@ -9,6 +10,16 @@ import Data.Functor (($>))
 
 import Syntax
 import Val
+import Intrinsics
+
+type Env = Map Ident Val
+type EvalCtx = ReaderT Env (ExceptT EvalError IO)
+
+runEval :: Env -> EvalCtx a -> IO (Either EvalError a)
+runEval env m = runExceptT (runReaderT m env)
+
+liftCtx :: IO (Either EvalError a) -> EvalCtx a
+liftCtx m = liftEither =<< liftIO m
 
 (!?) :: (Num i, Ord i) => [a] -> i -> Maybe a
 (a : _) !? 0 = Just a
@@ -26,18 +37,18 @@ ref = liftIO . newIORef
 unref :: MonadIO m => IORef a -> m a
 unref = liftIO . readIORef
 
-eval' :: MonadEval m => Expr -> m Val
-eval' (NumLit n) = pure $ NumVal n
-eval' (BoolLit b) = pure $ BoolVal b
-eval' (StrLit s) = pure $ StrVal s
-eval' UnitLit = pure UnitVal
-eval' (ArrayLit es) = ArrayVal <$> (ref =<< traverse eval' es)
-eval' (RecLit fs) = RecVal <$> (ref . M.fromList =<< traverse (traverse eval') fs)
+eval' :: Expr -> EvalCtx Val
+eval' (NumLit n) = pure $ Num n
+eval' (BoolLit b) = pure $ Bool b
+eval' (StrLit s) = pure $ Str s
+eval' UnitLit = pure Unit
+eval' (ListLit es) = List <$> (ref =<< traverse eval' es)
+eval' (RecLit fs) = Rec <$> (ref . M.fromList =<< traverse (traverse eval') fs)
 
 eval' (RecMember r f) = do
   record <- eval' r
   case record of
-    RecVal m' -> do
+    Rec m' -> do
       m <- unref m'
       case m M.!? f of
         Just e -> pure e
@@ -45,13 +56,13 @@ eval' (RecMember r f) = do
     _ -> throwError "Non-record in RecMember."
 
 eval' (Index e idx) = do
-  arr <- eval' e
+  list <- eval' e
   i <- eval' idx
 
   case i of
-    NumVal n ->
-      case arr of
-        ArrayVal vs' -> do
+    Num n ->
+      case list of
+        List vs' -> do
           vs <- unref vs'
           case vs !? n of
             Just v -> pure v
@@ -71,44 +82,42 @@ eval' (Let bs e) = mdo
 
 eval' (Lam i e) = do
   env <- ask
-  pure $ LamVal env i e
+  pure $ Fn \v -> runEval (M.insert i v env) $ eval' e
 
 eval' (App f a) = do
   f' <- eval' f
   a' <- eval' a
 
   case f' of
-    LamVal env i e -> runEval' (M.insert i a' env) (eval' e)
+    Fn fn -> liftCtx $ fn a'
     _ -> throwError "Non-function in App."
 
 eval' (And a b) = do
   a' <- eval' a
-  t <- truthy a'
 
-  if not t
+  if not $ truthy a'
   then pure a'
   else eval' b
 
 eval' (Or a b) = do
   a' <- eval' a
-  t <- truthy a'
 
-  if t
+  if truthy a'
   then pure a'
   else eval' b
 
 eval' (Assign (Index e i) v) = do
-  arr <- eval' e
+  list <- eval' e
   i' <- eval' i
   v' <- eval' v
 
-  case arr of
-    ArrayVal a' ->
+  case list of
+    List l' ->
       case i' of
-        NumVal n -> do
-          a <- liftIO $ readIORef a'
-          case replaceAt a n v' of
-            Just newA -> liftIO (writeIORef a' newA) $> UnitVal
+        Num n -> do
+          l <- liftIO $ readIORef l'
+          case replaceAt l n v' of
+            Just newL -> liftIO (writeIORef l' newL) $> Unit
             Nothing -> throwError "Index out of range."
         _ -> throwError "Non-number index in Assign Index."
     _ -> throwError "Non-array LHS in Assign Index."
@@ -118,27 +127,21 @@ eval' (Assign (RecMember e f) v) = do
   v' <- eval' v
 
   case r of
-    RecVal fs' -> do
+    Rec fs' -> do
       fs <- liftIO $ readIORef fs'
-      liftIO (writeIORef fs' $ M.insert f v' fs) $> UnitVal
+      liftIO (writeIORef fs' $ M.insert f v' fs) $> Unit
     _ -> throwError "Non-record LHS in Assign Member."
 
 eval' (Assign _ _) = throwError "Non-member expression in Assign. This shouldn't have parsed."
 
 eval' (If c t e) = do
-  c' <- truthy =<< eval' c
+  c' <- eval' c
   eval'
-    if c'
+    if truthy c'
     then t
     else e
 
 eval' (Seq a b) = eval' a *> eval' b
 
-runEval :: Env -> ReaderT Env (ExceptT EvalError IO) a -> IO (Either EvalError a)
-runEval env m = runExceptT (runReaderT m env)
-
-runEval' :: MonadEval m => Env -> ReaderT Env (ExceptT EvalError IO) a -> m a
-runEval' env m = liftEither =<< liftIO (runEval env m)
-
 eval :: Expr -> IO (Either EvalError Val)
-eval = runEval M.empty . eval'
+eval = runEval intrinsics . eval'

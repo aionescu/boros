@@ -12,6 +12,9 @@ cradle:
     - path: "src/Val.hs"
       component: "fcc:exe:fcc"
 
+    - path: "src/Intrinsics.hs"
+      component: "fcc:exe:fcc"
+
     - path: "src/Eval.hs"
       component: "fcc:exe:fcc"
 

@@ -1,11 +1,8 @@
 module Val where
 
-import Control.Monad.Except (MonadError)
-import Data.Map(Map)
-import qualified Data.Map as M
-import Control.Monad.IO.Class (MonadIO(liftIO))
+import Data.Map.Lazy(Map)
+import qualified Data.Map.Lazy as M
 import Data.IORef(IORef, readIORef)
-import Control.Monad.Reader (MonadReader)
 import Data.Char (toLower)
 import System.IO.Unsafe (unsafePerformIO)
 import Data.List (intercalate)
@@ -13,20 +10,20 @@ import Data.List (intercalate)
 import Syntax
 import Unsafe.Coerce (unsafeCoerce)
 import Data.Void (Void)
-import Control.Monad.Fix (MonadFix)
+import Data.Typeable (Typeable)
+import GHC.Base (reallyUnsafePtrEquality#)
 
 data Val
-  = UnitVal
-  | NumVal Integer
-  | BoolVal Bool
-  | StrVal String
-  | ArrayVal (IORef [Val])
-  | RecVal (IORef (Map Ident Val))
-  | LamVal Env Ident Expr
+  = Unit
+  | Num Integer
+  | Bool Bool
+  | Str String
+  | List (IORef [Val])
+  | Rec (IORef (Map Ident Val))
+  | Fn (Val -> IO (Either EvalError Val))
+  deriving stock Typeable
 
-type Env = Map Ident Val
 type EvalError = String
-type MonadEval m = (MonadError EvalError m, MonadReader Env m, MonadIO m, MonadFix m)
 
 type SeenVals = [IORef Void]
 
@@ -51,23 +48,71 @@ addSeen :: IORef a -> SeenVals -> SeenVals
 addSeen = (:) . unsafeCoerce
 
 showVal :: SeenVals -> Val -> String
-showVal _ UnitVal = "()"
-showVal _ (NumVal n) = show n
-showVal _ (BoolVal b) = toLower <$> show b
-showVal _ (StrVal s) = show s
-showVal seen (ArrayVal a) = guardCycle seen a $ showArr (addSeen a seen) <$> readIORef a
-showVal seen (RecVal r) = guardCycle seen r $ showRec (addSeen r seen) <$> readIORef r
-showVal _ LamVal{} = "<λ>"
+showVal _ Unit = "()"
+showVal _ (Num n) = show n
+showVal _ (Bool b) = toLower <$> show b
+showVal _ (Str s) = show s
+showVal seen (List a) = guardCycle seen a $ showArr (addSeen a seen) <$> readIORef a
+showVal seen (Rec r) = guardCycle seen r $ showRec (addSeen r seen) <$> readIORef r
+showVal _ Fn{} = "<λ>"
 
--- TODO: Don't print cyclical values
 instance Show Val where
   show = showVal []
 
-truthy :: MonadEval m => Val -> m Bool
-truthy UnitVal = pure True -- Is () truthy?
-truthy (NumVal n) = pure $ n /= 0
-truthy (BoolVal b) = pure b
-truthy (StrVal s) = pure $ not $ null s
-truthy (ArrayVal a) = liftIO $ not . null <$> readIORef a
-truthy (RecVal r) = liftIO $ not . M.null <$> readIORef r
-truthy LamVal{} = pure True -- Lambdas are truthy in Python so...
+compareVal :: Val -> Val -> Either EvalError Ordering
+compareVal Unit Unit = pure EQ
+compareVal (Num a) (Num b) = pure $ compare a b
+compareVal (Bool a) (Bool b) = pure $ compare a b
+compareVal (Str a) (Str b) = pure $ compare a b
+compareVal _ _ = Left "Invalid values in comparison."
+
+eqVal :: Val -> Val -> Bool
+eqVal Unit Unit = True
+eqVal (Num a) (Num b) = a == b
+eqVal (Bool a) (Bool b) = a == b
+eqVal (Str a) (Str b) = a == b
+
+eqVal (List a') (List b') = a' == b' || unsafePerformIO do
+  a <- readIORef a'
+  b <- readIORef b'
+  pure $ length a == length b && a == b
+
+eqVal (Rec a') (Rec b') = a' == b' || unsafePerformIO do
+  a <- M.toList <$> readIORef a'
+  b <- M.toList <$>  readIORef b'
+
+  pure $ a == b
+
+eqVal _ _ = False
+
+instance Eq Val where
+  (==) = eqVal
+
+physEqVal :: Val -> Val -> Bool
+physEqVal (List a) (List b) = a == b
+physEqVal (Rec a) (Rec b) = a == b
+
+physEqVal (Fn a) (Fn b) =
+  case reallyUnsafePtrEquality# a b of
+    0# -> False
+    _ -> True
+
+physEqVal a b = eqVal a b
+
+truthy :: Val -> Bool
+truthy Unit = True
+truthy (Num n) = n /= 0
+truthy (Bool b) = b
+truthy (Str s) = not $ null s
+truthy (List a) = unsafePerformIO $ not . null <$> readIORef a
+truthy (Rec r) = unsafePerformIO $ not . M.null <$> readIORef r
+truthy Fn{} = True
+
+valType :: Val -> String
+valType Unit = "()"
+valType Num{} = "Num"
+valType Bool{} = "Bool"
+valType Str{} = "Str"
+valType List{} = "List"
+valType Rec{} = "Rec"
+valType Fn{} = "Fn"

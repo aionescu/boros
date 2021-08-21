@@ -22,6 +22,7 @@ executable fcc
     Preprocess
     Parser
     Val
+    Intrinsics
     Eval
     Paths_fcc
 
@@ -71,6 +72,7 @@ executable fcc
     InstanceSigs
     KindSignatures
     LambdaCase
+    MagicHash
     MultiParamTypeClasses
     MultiWayIf
     NamedFieldPuns

@@ -4,6 +4,7 @@ import System.Environment(getArgs)
 
 import Preprocess(parse)
 import Parser(program)
+import Val(Val(..))
 import Eval(eval)
 
 getCode :: IO String
@@ -22,4 +23,5 @@ main = do
       val' <- eval ast
       case val' of
         Left err -> putStrLn $ "Evaluation error: " ++ err
+        Right Unit -> pure ()
         Right val -> print val

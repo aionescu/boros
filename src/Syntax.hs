@@ -9,7 +9,7 @@ data Expr
   | BoolLit Bool
   | StrLit String
   | UnitLit
-  | ArrayLit [Expr]
+  | ListLit [Expr]
   | RecLit [(Ident, Expr)]
   | RecMember Expr Ident
   | Index Expr Expr

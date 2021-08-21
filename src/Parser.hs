@@ -72,8 +72,8 @@ str = StrLit <$> strRaw
 simpleLit :: Parser Expr
 simpleLit = choice [try str, try num, bool]
 
-arrayLit :: Parser Expr
-arrayLit = parens '[' ']' $ ArrayLit <$> expr `sepEndBy` comma
+listLit :: Parser Expr
+listLit = parens '[' ']' $ ListLit <$> expr `sepEndBy` comma
 
 recLit :: Parser Expr
 recLit = RecLit <$> parens '{' '}' (unique =<< field `sepEndBy` comma)
@@ -127,7 +127,7 @@ lam :: Parser Expr
 lam = unrollLam <$> (many1 ident <* string "->" <* ws) <*> exprNoSeq
 
 exprNoMember :: Parser Expr
-exprNoMember = choice (try <$> [if', lam, recLit, arrayLit, simpleLit, var, parensExpr]) <* ws
+exprNoMember = choice (try <$> [if', lam, recLit, listLit, simpleLit, var, parensExpr]) <* ws
 
 member :: Parser Expr -> Parser Expr
 member lhs = foldl' unroll <$> lhs <*> many (char '.' *> (Left <$> index <|> Right <$> ident) <* ws)
@@ -149,9 +149,10 @@ data Assoc = L | R
 
 precedenceTable :: [(String, Assoc)]
 precedenceTable =
-  [ ("*/%", L)
+  [ ("^", R)
+  , ("*/%", L)
   , ("+-&", L)
-  , (":@^.", R)
+  , (":@.", R)
   , ("<>", R)
   , ("=!|~", L)
   , ("$@\\?", R)
