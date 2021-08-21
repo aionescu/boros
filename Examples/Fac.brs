@@ -13,4 +13,5 @@ in
 let fac' x = fix facF x in
 
 print $ fac 1000;
-print $ fac' 1000
+print $ fac' 1000;
+let a = "abc" in 2
