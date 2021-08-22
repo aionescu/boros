@@ -8,8 +8,8 @@
 
 Prerequisites:
 
-* GHC >=8.10.5
-* cabal >=3.4.0.0
+* GHC (>= 8.10.5)
+* cabal (>= 3.4.0.0)
 
 (Can be installed via [ghcup](https://www.haskell.org/ghcup/))
 
@@ -22,7 +22,7 @@ cabal new-build
 ### Run the interpreter
 
 ```sh
-cabal new-run . -- <file.brs> <args for boros script>...
+cabal new-run . -- <script file> <args for boros script>...
 ```
 
 e.g.
