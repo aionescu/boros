@@ -204,7 +204,7 @@ exprNoSeq :: Parser Expr
 exprNoSeq = choice [try let' <|> try assign <|> expr]
 
 exprFull :: Parser Expr
-exprFull = exprNoSeq `chainr1` (char ';' *> ws $> Seq)
+exprFull = option UnitLit exprNoSeq `chainr1` (char ';' *> ws $> Seq)
 
 program :: Parser Expr
 program = option () shebang *> ws *> exprFull <* eof

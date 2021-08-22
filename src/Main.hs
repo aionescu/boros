@@ -7,23 +7,24 @@ import Parser(program, parse)
 import Val
 import Eval
 import Control.Monad.Except (ExceptT, MonadIO (liftIO), runExceptT)
+import Control.Monad (join)
 
 getCode :: IO String
 getCode = do
-  [path] <- getArgs
+  (path : _) <- getArgs
   case path of
     "-" -> getContents
     _ -> readFile path
 
-runOnce :: Code -> ExceptT EvalError IO (Maybe Code)
-runOnce input = do
+runOnce :: Args ->  Code -> ExceptT EvalError IO (Maybe Code)
+runOnce args input = do
   comms <- parse comments input
   codes <- parse codeBlocks input
 
   let code = inlineComments comms codes
   expr <- parse program code
 
-  (newComms, val) <- evalWithComments comms expr
+  (newComms, val) <- evalWithComments args comms expr
   case val of
     Unit -> pure ()
     _ -> liftIO $ print val
@@ -33,14 +34,14 @@ runOnce input = do
     then Nothing
     else Just $ applyComments newComms codes
 
-runAll :: Code -> IO ()
-runAll code = do
-  result <- runExceptT $ runOnce code
+runAll :: Args -> Code -> IO ()
+runAll args code = do
+  result <- runExceptT $ runOnce args code
   case result of
     Left "Halt" -> pure ()
-    Left err -> putStrLn $ "Runtime error: " ++ err ++ "."
+    Left err -> putStrLn $ "Runtime error: " ++ err
     Right Nothing -> pure ()
-    Right (Just newCode) -> runAll newCode
+    Right (Just newCode) -> runAll args newCode
 
 main :: IO ()
-main = getCode >>= runAll
+main = join $ runAll <$> (tail <$> getArgs) <*> getCode

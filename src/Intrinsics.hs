@@ -119,6 +119,9 @@ read' s =
     Nothing -> Left "Ill-formatted string in `read`."
     Just v -> pure v
 
+getLine' :: () -> IO String
+getLine' _ = getLine
+
 intrinsics :: Map Ident Val
 intrinsics =
   M.fromList
@@ -126,7 +129,8 @@ intrinsics =
   , ("fix", toVal fixVal)
 
   , ("print", toVal $ print @Val)
-  , ("not", toVal not)
+  , ("getLine", toVal getLine')
+  , ("not", toVal $ not . truthy)
 
   , ("+", toVal plus)
   , ("-", toVal $ (-) @Integer)
@@ -154,4 +158,6 @@ intrinsics =
 
   , ("show", toVal $ show @Val)
   , ("read", toVal read')
+
+  , ("length", toVal $ length @[] @Val)
   ]

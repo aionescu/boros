@@ -16,6 +16,8 @@ import Preprocess (Comment)
 type Env = Map Ident Val
 type EvalCtx = ReaderT Env (ExceptT EvalError IO)
 
+type Args = [String]
+
 runEval :: Env -> EvalCtx a -> IO (Either EvalError a)
 runEval env m = runExceptT (runReaderT m env)
 
@@ -157,10 +159,13 @@ eval' (Seq a b) = eval' a *> eval' b
 eval :: Expr -> IO (Either EvalError Val)
 eval = runEval intrinsics . eval'
 
-evalWithComments :: [Comment] -> Expr -> ExceptT EvalError IO ([Comment], Val)
-evalWithComments comms expr = do
+evalWithComments :: Args -> [Comment] -> Expr -> ExceptT EvalError IO ([Comment], Val)
+evalWithComments args comms expr = do
   commsVal@(List commsRef) <- pure $ toVal comms
+  let argsVal = toVal args
 
-  v <- ExceptT $ runEval (M.insert "comments" commsVal intrinsics) $ eval' expr
+  let vars = M.fromList [("args", argsVal), ("comments", commsVal)]
+
+  v <- ExceptT $ runEval (M.union vars intrinsics) $ eval' expr
   Just (newComms :: [Comment]) <- liftIO $ traverse ofVal <$> readIORef commsRef
   pure (newComms, v)

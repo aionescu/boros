@@ -13,7 +13,7 @@ import Data.Void (Void)
 import Data.Typeable (Typeable)
 import GHC.Base (reallyUnsafePtrEquality#)
 import Parser hiding (parse)
-import Text.Parsec (getInput, parse, choice, try)
+import Text.Parsec (getInput, parse, choice, try, eof)
 import Data.Foldable (toList)
 import Data.Functor (($>))
 
@@ -139,8 +139,11 @@ listVal = list (List . unsafePerformIO . newIORef) pVal
 recVal :: Parser Val
 recVal = rec' (Rec . unsafePerformIO . newIORef . M.fromList) pVal
 
+pVal' :: Parser Val
+pVal' = choice $ try <$> [recVal, listVal, strVal, boolVal, numVal, unitVal]
+
 pVal :: Parser Val
-pVal = choice $ try <$> [recVal, listVal, strVal, boolVal, numVal, unitVal]
+pVal = ws *> pVal' <* ws <* eof
 
 withRest :: Parser a -> Parser (a, String)
 withRest p = (,) <$> p <*> getInput

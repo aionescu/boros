@@ -1,16 +1,12 @@
-let fac x =
-  if x == 0
-  then 1
-  else x * fac (x - 1)
-in
+#!/usr/bin/env boros
 
-let facF f x =
-  if x == 0
-  then 1
-  else x * f (x - 1)
-in
+let n = {- 0 -} || read args.[0] in
+let n' = {- 1 -} in
 
-let fac' x = fix facF x in
+if n == 1 then (
+  print n';
+  halt ();
+);
 
-print $ fac 1000;
-print $ fac' 1000
+comments.[1] <- show $ read comments.[1] * n;
+comments.[0] <- show $ n - 1;
