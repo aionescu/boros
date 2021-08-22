@@ -18,7 +18,7 @@ let wrap n =
     n
 in
 
-let state = {- { tape = [0], crr = 0 } -} in
+let state = { tape = [0], crr = 0 } in
 
 let evalOp op =
   if op == "+" then
@@ -33,7 +33,7 @@ let evalOp op =
   else if op == ">" then
     (if state.crr == length state.tape - 1 then
       state.tape <- state.tape + [0];
-
+    print "Growing";
     state.crr <- state.crr + 1)
   else if op == "," then
     state.tape.[state.crr] <- getChar ()
@@ -68,14 +68,7 @@ let parse ops =
   go [] [] 0
 in
 
-let ops = {- parse $ explode $ readFile args.[0] -} in
-let opIdx = {- 0 -} in
+let ops = parse $ explode $ readFile args.[0] in
+print "Parsed";
 
-if opIdx == length ops then
-  halt ();
-
-comments.[0] <- state;
-comments.[1] <- show ops;
-comments.[2] <- opIdx + 1;
-
-evalOp ops.[opIdx]
+iter evalOp ops
