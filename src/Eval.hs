@@ -156,8 +156,9 @@ eval' (If c t e) = do
 
 eval' (Seq a b) = eval' a *> eval' b
 
-eval :: Expr -> IO (Either EvalError Val)
-eval = runEval intrinsics . eval'
+ofComm :: Val -> Comment
+ofComm (Str s) = s
+ofComm v = show v
 
 evalWithComments :: Args -> [Comment] -> Expr -> ExceptT EvalError IO ([Comment], Val)
 evalWithComments args comms expr = do
@@ -167,5 +168,5 @@ evalWithComments args comms expr = do
   let vars = M.fromList [("args", argsVal), ("comments", commsVal)]
 
   v <- ExceptT $ runEval (M.union vars intrinsics) $ eval' expr
-  Just (newComms :: [Comment]) <- liftIO $ traverse ofVal <$> readIORef commsRef
+  newComms :: [Comment] <- liftIO $ (ofComm <$>) <$> readIORef commsRef
   pure (newComms, v)

@@ -7,8 +7,8 @@ let b = {- 2 -} in
 if n == 100 then
   halt ();
 
-comments.[0] <- show (n + 1);
+comments.[0] <- n + 1;
 comments.[1] <- comments.[2];
-comments.[2] <- show (a + b);
+comments.[2] <- a + b;
 
 a
