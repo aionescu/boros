@@ -6,7 +6,7 @@
 
 ## Build instructions
 
-Prerequisites:
+### Prerequisites
 
 * GHC (>= 8.10.5)
 * cabal (>= 3.4.0.0)
@@ -40,6 +40,8 @@ You can install it by running the `install-vscode-ext.sh` script.
 ## Language features
 
 `boros` is a strict, impure, dynamically-typed functional language with ML-inspired syntax.
+
+[*(Jump to examples)*](Examples)
 
 ### Syntax
 
@@ -96,11 +98,6 @@ A good example of this can be found in the [Fibonacci](Examples/Fibonacci.brs) e
 You can use the `type` function to get the "kinda sorta" type of a value, e.g. `type 2 == "Num"`, `type [1, "abc"] == "List"`.
 
 You can also throw exceptions using the `throw` function. Any value can be provided as parameter, and will be `show`n in the error message. There is currently no `catch`/`finally` mechanism.
-
-### Examples
-
-You can find code examples [here](Examples).
-The most interesting ones are the multiple versions of the [Brainfuck interpreter](Examples/BF).
 
 ## License
 

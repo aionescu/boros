@@ -62,7 +62,7 @@ strRaw = between quote quote $ many ch
     unescape a = a
 
     escaped = char '\\' *> oneOf "\\\"0nrvtbf{-}" <&> unescape
-    regular = noneOf "\\\"\0\n\r\v\t\b\f{-}"
+    regular = noneOf "\\\"\0\n\r\v\t\b\f"
     ch = regular <|> escaped
     quote = char '"'
 

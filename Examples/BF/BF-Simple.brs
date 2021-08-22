@@ -23,19 +23,19 @@ let state = { tape = [0], crr = 0 } in
 let evalOp op =
   if op == "+" then
     state.tape.[state.crr] <- wrap $ state.tape.[state.crr] + 1
-  else if op == "\-" then
+  else if op == "-" then
     state.tape.[state.crr] <- wrap $ state.tape.[state.crr] - 1
   else if op == "<" then
     if state.crr == 0 then
       state.tape <- [0] + state.tape
     else
       state.crr <- state.crr - 1
-  else if op == ">" then
-    (if state.crr == length state.tape - 1 then
+  else if op == ">" then (
+    if state.crr == length state.tape - 1 then
       state.tape <- state.tape + [0];
-    print "Growing";
-    state.crr <- state.crr + 1)
-  else if op == "," then
+
+    state.crr <- state.crr + 1
+  ) else if op == "," then
     state.tape.[state.crr] <- getChar ()
   else if op == "." then
     putChar state.tape.[state.crr]
@@ -52,16 +52,16 @@ let parse ops =
         reverse scope
       else
         throw "Unmatched '['"
-    else if contains (explode "+\-<>,.") ops.[i] then
+    else if contains (explode "+-<>,.") ops.[i] then
       go ([ops.[i]] + scope) stack (i + 1)
     else if ops.[i] == "[" then
       go [] ([scope] + stack) (i + 1)
     else if ops.[i] == "]" then
-      (if not stack then
+      if not stack then
         throw "Unmatched ']'"
       else
         let parent = pop stack in
-        go ([{ ops = reverse scope }] + parent) stack (i + 1))
+        go ([{ ops = reverse scope }] + parent) stack (i + 1)
     else
       go scope stack (i + 1)
   in
@@ -69,6 +69,5 @@ let parse ops =
 in
 
 let ops = parse $ explode $ readFile args.[0] in
-print "Parsed";
 
 iter evalOp ops
