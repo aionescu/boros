@@ -2,7 +2,7 @@
 
 <img src="Assets/Ouroboros.png" width="150" height="150" />
 
-`boros` (Shortened from [Ouroboros](https://en.wikipedia.org/wiki/Ouroboros)) is a functional programming language that supports `first-class comments`.
+`boros` (Shortened from [Ouroboros](https://en.wikipedia.org/wiki/Ouroboros)) is a functional programming language that supports `first-class comments`, developed during the [2021 LangJam](https://github.com/langjam/jam0001).
 
 ## Build instructions
 
@@ -101,3 +101,8 @@ You can also throw exceptions using the `throw` function. Any value can be provi
 
 You can find code examples [here](Examples).
 The most interesting ones are the multiple versions of the [Brainfuck interpreter](Examples/BF).
+
+## License
+
+This repository is licensed under the terms of the GNU General Public License v3.
+For more details, see [the license file](LICENSE.txt).
