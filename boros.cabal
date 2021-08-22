@@ -76,7 +76,6 @@ executable boros
     MultiParamTypeClasses
     MultiWayIf
     NamedFieldPuns
-    OverloadedStrings
     PatternSynonyms
     RankNTypes
     RecordWildCards

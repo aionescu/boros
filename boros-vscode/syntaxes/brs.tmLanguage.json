@@ -36,9 +36,6 @@
     },
     "comments": {
       "patterns": [{
-        "name": "comment.double-dash.brs",
-        "match": "--.*$"
-      }, {
         "name": "comment.number-sign.brs",
         "match": "^#.*$"
       }, {

@@ -51,11 +51,16 @@ guardCycle seen r s =
 addSeen :: IORef a -> SeenVals -> SeenVals
 addSeen = (:) . unsafeCoerce
 
+escapeComms :: Char -> String
+escapeComms c
+  | c `elem` "{-}" = ['\\', c]
+  | otherwise = [c]
+
 showVal :: SeenVals -> Val -> String
 showVal _ Unit = "()"
 showVal _ (Num n) = show n
 showVal _ (Bool b) = toLower <$> show b
-showVal _ (Str s) = show s
+showVal _ (Str s) = escapeComms =<< show s
 showVal seen (List a) = guardCycle seen a $ showArr (addSeen a seen) <$> readIORef a
 showVal seen (Rec r) = guardCycle seen r $ showRec (addSeen r seen) <$> readIORef r
 showVal _ Fn{} = "<λ>"
