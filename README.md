@@ -49,7 +49,7 @@ Variables and functions are declared with `let`, and multiple mutually-recursive
 
 Here's a simple factorial program:
 
-```ocaml
+```haskell
 let fact x =
   if not x then
     1
