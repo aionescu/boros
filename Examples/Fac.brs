@@ -1,12 +1,7 @@
 #!/usr/bin/env boros
 
-let n = {- 0 -} || read args.[0] in
 let n' = {- 1 -} in
+let n = read args.[0] - {- 0 -} || (print n'; halt ()) in
 
-if n == 1 then (
-  print n';
-  halt ();
-);
-
-comments.[1] <- show $ read comments.[1] * n;
-comments.[0] <- show $ n - 1;
+comments.[0] <- show $ read comments.[0] * n;
+comments.[1] <- show $ read comments.[1] + 1;
