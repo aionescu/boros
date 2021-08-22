@@ -213,4 +213,4 @@ program :: Parser Expr
 program = option () shebang *> ws *> exprFull <* eof
 
 parse :: MonadError String m => Parser a -> String -> m a
-parse p = liftEither . first show . runParser p () ""
+parse p = liftEither . first (("Parser error:\n" ++) . show) . runParser p () ""

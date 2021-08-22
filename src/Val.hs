@@ -73,7 +73,7 @@ compareVal Unit Unit = pure EQ
 compareVal (Num a) (Num b) = pure $ compare a b
 compareVal (Bool a) (Bool b) = pure $ compare a b
 compareVal (Str a) (Str b) = pure $ compare a b
-compareVal _ _ = Left "Invalid values in comparison."
+compareVal _ _ = Left "Invalid values in comparison"
 
 eqVal :: Val -> Val -> Bool
 eqVal Unit Unit = True

@@ -1,12 +1,14 @@
 module Eval where
 
 import Control.Monad.Except (throwError, ExceptT (ExceptT), runExceptT, liftEither)
+import Data.List (isPrefixOf)
 import Data.Map.Lazy(Map)
 import qualified Data.Map.Lazy as M
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Data.IORef(IORef, newIORef, readIORef, writeIORef)
 import Control.Monad.Reader (MonadReader (ask, local), asks, ReaderT, runReaderT)
 import Data.Functor (($>))
+import Data.Bifunctor (first)
 
 import Syntax
 import Val
@@ -55,8 +57,8 @@ eval' (RecMember r f) = do
       m <- unref m'
       case m M.!? f of
         Just e -> pure e
-        Nothing -> throwError $ "Field " ++ show f ++ " does not exist."
-    _ -> throwError "Non-record in RecMember."
+        Nothing -> throwError $ "Inexistent record field  " ++ show f
+    _ -> throwError "Tried to access member of a non-record"
 
 eval' (Index e idx) = do
   list <- eval' e
@@ -69,15 +71,15 @@ eval' (Index e idx) = do
           vs <- unref vs'
           case vs !? n of
             Just v -> pure v
-            Nothing -> throwError "Index out of range."
-        _ -> throwError "Non-array in Index."
-    _ -> throwError "Non-numeric array index."
+            Nothing -> throwError "List index out of range"
+        _ -> throwError "Tried to index into a non-list"
+    _ -> throwError "List index is not of type Num"
 
 eval' (Var i) = do
   var <- asks (M.!? i)
   case var of
     Just v -> pure v
-    Nothing -> throwError $ "Variable " ++ show i ++ " not defined."
+    Nothing -> throwError $ "Variable " ++ show i ++ " is not defined"
 
 eval' (Let bs e) = mdo
   let
@@ -103,7 +105,7 @@ eval' (App f a) = do
 
   case f' of
     Fn fn -> liftCtx $ fn a'
-    _ -> throwError "Non-function in App."
+    _ -> throwError "Tried to apply a non-function"
 
 eval' (And a b) = do
   a' <- eval' a
@@ -131,9 +133,9 @@ eval' (Assign (Index e i) v) = do
           l <- liftIO $ readIORef l'
           case replaceAt l n v' of
             Just newL -> liftIO (writeIORef l' newL) $> Unit
-            Nothing -> throwError "Index out of range in Assign Index."
-        _ -> throwError "Non-number index in Assign Index."
-    _ -> throwError "Non-array LHS in Assign Index."
+            Nothing -> throwError "Tried to assign to out-of-rangee index"
+        _ -> throwError "Tried to assign to non-numeric index"
+    _ -> throwError "Tried to assign an index in a non-list"
 
 eval' (Assign (RecMember e f) v) = do
   r <- eval' e
@@ -143,9 +145,9 @@ eval' (Assign (RecMember e f) v) = do
     Rec fs' -> do
       fs <- liftIO $ readIORef fs'
       liftIO (writeIORef fs' $ M.insert f v' fs) $> Unit
-    _ -> throwError "Non-record LHS in Assign Member."
+    _ -> throwError "Tried to assign a field in a non-record"
 
-eval' (Assign _ _) = throwError "Non-member expression in Assign. This shouldn't have parsed."
+eval' (Assign _ _) = throwError "PANIC: Non-member expression in Assign"
 
 eval' (If c t e) = do
   c' <- eval' c
@@ -160,6 +162,12 @@ ofComm :: Val -> Comment
 ofComm (Str s) = s
 ofComm v = show v
 
+showEvalError :: EvalError  -> String
+showEvalError "Halt" = "Halt"
+showEvalError ee
+  | "User-thrown" `isPrefixOf` ee = ee
+  | otherwise = "Runtime error: " ++ ee
+
 evalWithComments :: Args -> [Comment] -> Expr -> ExceptT EvalError IO ([Comment], Val)
 evalWithComments args comms expr = do
   commsVal@(List commsRef) <- pure $ toVal comms
@@ -167,6 +175,6 @@ evalWithComments args comms expr = do
 
   let vars = M.fromList [("args", argsVal), ("comments", commsVal)]
 
-  v <- ExceptT $ runEval (M.union vars intrinsics) $ eval' expr
+  v <- ExceptT $ first showEvalError <$> runEval (M.union vars intrinsics) (eval' expr)
   newComms :: [Comment] <- liftIO $ (ofComm <$>) <$> readIORef commsRef
   pure (newComms, v)

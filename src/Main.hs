@@ -40,7 +40,7 @@ runAll args code = do
   result <- runExceptT $ runOnce args code
   case result of
     Left "Halt" -> pure ()
-    Left err -> putStrLn $ "Runtime error: " ++ err
+    Left err -> putStrLn err
     Right Nothing -> pure ()
     Right (Just newCode) -> runAll args newCode
 
