@@ -1,7 +1,6 @@
 module Preprocess where
 
 import Text.Parsec hiding (parse)
-import Data.Bifunctor (first)
 
 type Code = String
 type Comment = String
@@ -22,9 +21,6 @@ comments = many (preComment *> comment) <* postComment
 
 codeBlocks :: Parser [Code]
 codeBlocks = (\l a -> l ++ [a]) <$> many (preComment <* comment) <*> postComment
-
-parse :: Parser a -> String -> Either String a
-parse p = first show . runParser p () ""
 
 appendComm :: String -> String -> String
 appendComm comm code = "{-" ++ comm ++ "-}" ++ code

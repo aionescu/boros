@@ -12,7 +12,7 @@ import Unsafe.Coerce (unsafeCoerce)
 import Data.Void (Void)
 import Data.Typeable (Typeable)
 import GHC.Base (reallyUnsafePtrEquality#)
-import Parser
+import Parser hiding (parse)
 import Text.Parsec (getInput, parse, choice, try)
 import Data.Foldable (toList)
 import Data.Functor (($>))

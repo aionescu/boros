@@ -6,6 +6,8 @@ import Data.List(nub)
 import Text.Parsec
 
 import Syntax
+import Data.Bifunctor (first)
+import Control.Monad.Except (MonadError, liftEither)
 
 type Parser = Parsec String ()
 
@@ -119,7 +121,7 @@ if' =
   If
   <$> (string "if" *> ws *> expr <* ws)
   <*> (string "then" *> ws *> exprNoSeq <* ws)
-  <*> (string "else" *> ws *> exprNoSeq <* ws)
+  <*> option UnitLit (string "else" *> ws *> exprNoSeq <* ws)
 
 unrollLam :: [String] -> Expr -> Expr
 unrollLam as e = foldr Lam e as
@@ -206,3 +208,6 @@ exprFull = exprNoSeq `chainr1` (char ';' *> ws $> Seq)
 
 program :: Parser Expr
 program = option () shebang *> ws *> exprFull <* eof
+
+parse :: MonadError String m => Parser a -> String -> m a
+parse p = liftEither . first show . runParser p () ""

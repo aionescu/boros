@@ -1,6 +1,6 @@
 module Eval where
 
-import Control.Monad.Except (throwError, ExceptT, runExceptT, liftEither)
+import Control.Monad.Except (throwError, ExceptT (ExceptT), runExceptT, liftEither)
 import Data.Map.Lazy(Map)
 import qualified Data.Map.Lazy as M
 import Control.Monad.IO.Class (MonadIO(liftIO))
@@ -12,7 +12,6 @@ import Syntax
 import Val
 import Intrinsics
 import Preprocess (Comment)
-import Data.Bifunctor (second)
 
 type Env = Map Ident Val
 type EvalCtx = ReaderT Env (ExceptT EvalError IO)
@@ -158,10 +157,10 @@ eval' (Seq a b) = eval' a *> eval' b
 eval :: Expr -> IO (Either EvalError Val)
 eval = runEval intrinsics . eval'
 
-evalWithComments :: [Comment] -> Expr -> IO (Either EvalError ([Comment], Val))
+evalWithComments :: [Comment] -> Expr -> ExceptT EvalError IO ([Comment], Val)
 evalWithComments comms expr = do
   commsVal@(List commsRef) <- pure $ toVal comms
 
-  v <- runEval (M.insert "comments" commsVal intrinsics) $ eval' expr
-  Just (newComms :: [Comment]) <- traverse ofVal <$> readIORef commsRef
-  pure $ second (newComms,) v
+  v <- ExceptT $ runEval (M.insert "comments" commsVal intrinsics) $ eval' expr
+  Just (newComms :: [Comment]) <- liftIO $ traverse ofVal <$> readIORef commsRef
+  pure (newComms, v)
