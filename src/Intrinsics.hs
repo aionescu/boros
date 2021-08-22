@@ -5,11 +5,13 @@ import qualified Data.Map.Lazy as M
 
 import Syntax
 import Val
-import Data.IORef (newIORef, readIORef)
+import Data.IORef (newIORef, readIORef, writeIORef)
 import System.IO.Unsafe (unsafePerformIO)
 import Data.Typeable (Typeable, typeRep, Proxy (Proxy))
 import Data.Function (fix)
 import Text.Read (readMaybe)
+import Data.Word (Word8)
+import Data.Functor (($>))
 
 class ToVal a where
   toVal :: a -> Val
@@ -41,6 +43,13 @@ instance ToVal Int where
   toVal = Num . toInteger
 
 instance OfVal Int where
+  ofVal (Num i) = Just $ fromInteger i
+  ofVal _ = Nothing
+
+instance ToVal Word8 where
+  toVal = Num . toInteger
+
+instance OfVal Word8 where
   ofVal (Num i) = Just $ fromInteger i
   ofVal _ = Nothing
 
@@ -122,14 +131,43 @@ read' s =
 getLine' :: () -> IO String
 getLine' _ = getLine
 
+getChar' :: () -> IO Word8
+getChar' _ = fromIntegral . fromEnum <$> getChar
+
+putChar' :: Word8 -> IO ()
+putChar' = putChar . toEnum . fromIntegral
+
+explode :: String -> [String]
+explode = ((: []) <$>)
+
+pop :: Val -> IO (Either EvalError Val)
+pop (List l') = do
+  l <- readIORef l'
+  case l of
+    [] -> pure $ Left "Empty list in `pop`."
+    (a : as) -> writeIORef l' as $> Right a
+pop _ = pure $ Left "Non-list in `pop`."
+
+throw :: Val -> Either EvalError Val
+throw v = Left $ "User-thrown exception: " ++ show v
+
 intrinsics :: Map Ident Val
 intrinsics =
   M.fromList
   [ ("halt", toVal halt)
+  , ("throw", toVal throw)
   , ("fix", toVal fixVal)
 
   , ("print", toVal $ print @Val)
+  , ("putStr", toVal putStr)
+  , ("putStrLn", toVal putStrLn)
   , ("getLine", toVal getLine')
+
+  , ("getChar", toVal getChar')
+  , ("putChar", toVal putChar')
+
+  , ("readFile", toVal readFile)
+
   , ("not", toVal $ not . truthy)
 
   , ("+", toVal plus)
@@ -160,4 +198,7 @@ intrinsics =
   , ("read", toVal read')
 
   , ("length", toVal $ length @[] @Val)
+  , ("explode", toVal explode)
+  , ("pop", toVal pop)
+  , ("reverse", toVal $ reverse @Val)
   ]

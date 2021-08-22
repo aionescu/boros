@@ -8,6 +8,7 @@ import Val
 import Eval
 import Control.Monad.Except (ExceptT, MonadIO (liftIO), runExceptT)
 import Control.Monad (join)
+import System.IO (hSetBuffering, stdin, BufferMode (NoBuffering), stdout)
 
 getCode :: IO String
 getCode = do
@@ -44,4 +45,7 @@ runAll args code = do
     Right (Just newCode) -> runAll args newCode
 
 main :: IO ()
-main = join $ runAll <$> (tail <$> getArgs) <*> getCode
+main = do
+  hSetBuffering stdin NoBuffering
+  hSetBuffering stdout NoBuffering
+  join $ runAll <$> (tail <$> getArgs) <*> getCode

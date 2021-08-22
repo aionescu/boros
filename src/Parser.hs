@@ -187,7 +187,7 @@ expr :: Parser Expr
 expr = exprOr
 
 binding :: Parser (Ident, Expr)
-binding = unrollBinding <$> ident <*> many ident <*> (equals *> exprFull <* ws)
+binding = unrollBinding <$> ident <*> many ident <*> (equals *> try exprFull <* ws)
   where
     unrollBinding i is e = (i, unrollLam is e)
 
