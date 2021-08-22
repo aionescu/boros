@@ -31,7 +31,7 @@
     "intrinsics": {
       "patterns": [{
         "name": "support.function.brs",
-        "match": "\\b(comments|args|halt|throw|fix|print|putStr|putStrLn|getLine|getChar|putChar|readFile|not|truthy|type|compare|show|read|length|explode|pop|reverse)\\b"
+        "match": "\\b(comments|args|halt|throw|fix|print|putStr|putStrLn|getLine|getChar|putChar|readFile|not|truthy|type|compare|show|read|length|explode|pop|reverse|contains)\\b"
       }]
     },
     "comments": {

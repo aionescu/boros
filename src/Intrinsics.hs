@@ -201,4 +201,5 @@ intrinsics =
   , ("explode", toVal explode)
   , ("pop", toVal pop)
   , ("reverse", toVal $ reverse @Val)
+  , ("contains", toVal $ flip $ elem @[] @Val)
   ]
