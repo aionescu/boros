@@ -33,13 +33,13 @@ cabal new-run . -- Examples/Factorial.brs 100
 
 ## VS Code Extension
 
-This repo also includes a VS Code extension for Boros syntax highlighting.
+This repo also includes a VS Code extension for syntax highlighting.
 
 You can install it by running the `install-vscode-ext.sh` script.
 
 ## Language features
 
-Boros is a strict, impure, dynamically-typed functional language with ML-inspired syntax.
+`boros` is a strict, impure, dynamically-typed functional language with ML-inspired syntax.
 
 ### Syntax
 
@@ -88,6 +88,14 @@ Furthermore, `boros` scripts have access to a value called `comments`, which con
 The script can modify this list, and when the script finishes, the comments *are replaced with the new values from the `comments` list*, and *the script is re-run*. This continues until either the script stops modifying the comments, or calls the `halt ()` function.
 
 A good example of this can be found in the [Fibonacci](Examples/Fibonacci.brs) example.
+
+### Types and Exceptions
+
+`boros` is dynamically-typed. Performing operations on values of the wrong type will halt the program with a `Runtime error`.
+
+You can use the `type` function to get the "kinda sorta" type of a value, e.g. `type 2 == "Num"`, `type [1, "abc"] == "List"`.
+
+You can also throw exceptions using the `throw` function. Any value can be provided as parameter, and will be `show`n in the error message. There is currently no `catch`/`finally` mechanism.
 
 ### Examples
 
