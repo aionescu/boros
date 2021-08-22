@@ -15,7 +15,7 @@ getCode = do
     "-" -> getContents
     _ -> readFile path
 
-runOnce :: Code -> ExceptT EvalError IO Code
+runOnce :: Code -> ExceptT EvalError IO (Maybe Code)
 runOnce input = do
   comms <- parse comments input
   codes <- parse codeBlocks input
@@ -28,7 +28,10 @@ runOnce input = do
     Unit -> pure ()
     _ -> liftIO $ print val
 
-  pure $ applyComments newComms codes
+  pure
+    if comms == newComms
+    then Nothing
+    else Just $ applyComments newComms codes
 
 runAll :: Code -> IO ()
 runAll code = do
@@ -36,7 +39,8 @@ runAll code = do
   case result of
     Left "Halt" -> pure ()
     Left err -> putStrLn $ "Runtime error: " ++ err ++ "."
-    Right newCode -> runAll newCode
+    Right Nothing -> pure ()
+    Right (Just newCode) -> runAll newCode
 
 main :: IO ()
 main = getCode >>= runAll
