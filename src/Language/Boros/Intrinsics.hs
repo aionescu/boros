@@ -3,6 +3,7 @@ module Language.Boros.Intrinsics where
 import Data.Map.Lazy(Map)
 import qualified Data.Map.Lazy as M
 
+import Utils
 import Language.Boros.Syntax
 import Language.Boros.Val
 import Data.IORef (newIORef, readIORef, writeIORef)
@@ -101,9 +102,6 @@ instance {-# OVERLAPPING #-} (Typeable a, OfVal a, ToVal b) => ToVal (a -> IO (E
 instance OfVal (Val -> IO (Either EvalError Val)) where
   ofVal (Fn f) = Just f
   ofVal _ = Nothing
-
-(...) :: (c -> d) -> (a -> b -> c) -> a -> b -> d
-(...) = (.) . (.)
 
 unErr :: (Val -> IO (Either EvalError Val)) -> Val -> Val
 unErr f v = case unsafePerformIO $ f v of

@@ -1,5 +1,8 @@
 cradle:
   cabal:
+    - path: "src/Utils.hs"
+      component: "boros:exe:boros"
+
     - path: "src/Language/Boros/Syntax.hs"
       component: "boros:exe:boros"
 

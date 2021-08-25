@@ -2,10 +2,10 @@ module Language.Boros.Preprocess where
 
 import Text.Parsec hiding (parse)
 
+import Utils
+
 type Code = String
 type Comment = String
-
-type Parser = Parsec String ()
 
 comment :: Parser Comment
 comment = try $ manyTill anyChar (try $ string "-}")

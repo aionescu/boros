@@ -10,6 +10,7 @@ import Control.Monad.Reader (MonadReader (ask, local), asks, ReaderT, runReaderT
 import Data.Functor (($>))
 import Data.Bifunctor (first)
 
+import Utils
 import Language.Boros.Syntax
 import Language.Boros.Val
 import Language.Boros.Intrinsics
@@ -25,16 +26,6 @@ runEval env m = runExceptT (runReaderT m env)
 
 liftCtx :: IO (Either EvalError a) -> EvalCtx a
 liftCtx m = liftEither =<< liftIO m
-
-(!?) :: (Num i, Ord i) => [a] -> i -> Maybe a
-(a : _) !? 0 = Just a
-(_ : as) !? n | n > 0 = as !? (n - 1)
-_ !? _ = Nothing
-
-replaceAt :: (Num i, Ord i) => [a] -> i -> a -> Maybe [a]
-replaceAt (_ : as) 0 v = Just $ v : as
-replaceAt (a : as) i v | i > 0 = (a :) <$> replaceAt as (i - 1) v
-replaceAt _ _ _ = Nothing
 
 ref :: MonadIO m => a -> m (IORef a)
 ref = liftIO . newIORef

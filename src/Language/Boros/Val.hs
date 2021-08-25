@@ -7,12 +7,13 @@ import Data.Char (toLower)
 import System.IO.Unsafe (unsafePerformIO)
 import Data.List (intercalate)
 
+import Utils hiding (parse)
 import Language.Boros.Syntax
 import Unsafe.Coerce (unsafeCoerce)
 import Data.Void (Void)
 import Data.Typeable (Typeable)
 import GHC.Base (reallyUnsafePtrEquality#)
-import Language.Boros.Parser hiding (parse)
+import Language.Boros.Parser
 import Text.Parsec (getInput, parse, choice, try, eof)
 import Data.Foldable (toList)
 import Data.Functor (($>))

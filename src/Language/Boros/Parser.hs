@@ -5,11 +5,8 @@ import Data.Functor((<&>), ($>))
 import Data.List(nub)
 import Text.Parsec
 
+import Utils
 import Language.Boros.Syntax
-import Data.Bifunctor (first)
-import Control.Monad.Except (MonadError, liftEither)
-
-type Parser = Parsec String ()
 
 reserved :: [String]
 reserved = ["let", "and", "in", "if", "then", "else", "true", "false"]
@@ -211,6 +208,3 @@ exprFull = option UnitLit exprNoSeq `chainr1` (char ';' *> ws $> Seq)
 
 program :: Parser Expr
 program = option () shebang *> ws *> exprFull <* eof
-
-parse :: MonadError String m => Parser a -> String -> m a
-parse p = liftEither . first (("Parser error:\n" ++) . show) . runParser p () ""

@@ -2,8 +2,9 @@ module Main where
 
 import System.Environment(getArgs)
 
+import Utils(parse)
 import Language.Boros.Preprocess(comments, codeBlocks, applyComments, Code, inlineComments)
-import Language.Boros.Parser(program, parse)
+import Language.Boros.Parser(program)
 import Language.Boros.Val
 import Language.Boros.Eval
 import Control.Monad.Except (ExceptT, MonadIO (liftIO), runExceptT)
