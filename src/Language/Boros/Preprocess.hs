@@ -1,4 +1,4 @@
-module Preprocess where
+module Language.Boros.Preprocess where
 
 import Text.Parsec hiding (parse)
 

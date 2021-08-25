@@ -18,12 +18,12 @@ executable boros
   main-is: Main.hs
 
   other-modules:
-    Syntax
-    Preprocess
-    Parser
-    Val
-    Intrinsics
-    Eval
+    Language.Boros.Syntax
+    Language.Boros.Preprocess
+    Language.Boros.Parser
+    Language.Boros.Val
+    Language.Boros.Intrinsics
+    Language.Boros.Eval
     Paths_boros
 
   autogen-modules:

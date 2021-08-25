@@ -1,10 +1,10 @@
-module Intrinsics where
+module Language.Boros.Intrinsics where
 
 import Data.Map.Lazy(Map)
 import qualified Data.Map.Lazy as M
 
-import Syntax
-import Val
+import Language.Boros.Syntax
+import Language.Boros.Val
 import Data.IORef (newIORef, readIORef, writeIORef)
 import System.IO.Unsafe (unsafePerformIO)
 import Data.Typeable (Typeable, typeRep, Proxy (Proxy))

@@ -1,11 +1,11 @@
-module Parser where
+module Language.Boros.Parser where
 
 import Data.Foldable(foldl')
 import Data.Functor((<&>), ($>))
 import Data.List(nub)
 import Text.Parsec
 
-import Syntax
+import Language.Boros.Syntax
 import Data.Bifunctor (first)
 import Control.Monad.Except (MonadError, liftEither)
 

@@ -1,4 +1,4 @@
-module Val where
+module Language.Boros.Val where
 
 import Data.Map.Lazy(Map)
 import qualified Data.Map.Lazy as M
@@ -7,12 +7,12 @@ import Data.Char (toLower)
 import System.IO.Unsafe (unsafePerformIO)
 import Data.List (intercalate)
 
-import Syntax
+import Language.Boros.Syntax
 import Unsafe.Coerce (unsafeCoerce)
 import Data.Void (Void)
 import Data.Typeable (Typeable)
 import GHC.Base (reallyUnsafePtrEquality#)
-import Parser hiding (parse)
+import Language.Boros.Parser hiding (parse)
 import Text.Parsec (getInput, parse, choice, try, eof)
 import Data.Foldable (toList)
 import Data.Functor (($>))

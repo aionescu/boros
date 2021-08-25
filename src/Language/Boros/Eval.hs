@@ -1,4 +1,4 @@
-module Eval where
+module Language.Boros.Eval where
 
 import Control.Monad.Except (throwError, ExceptT (ExceptT), runExceptT, liftEither)
 import Data.List (isPrefixOf)
@@ -10,10 +10,10 @@ import Control.Monad.Reader (MonadReader (ask, local), asks, ReaderT, runReaderT
 import Data.Functor (($>))
 import Data.Bifunctor (first)
 
-import Syntax
-import Val
-import Intrinsics
-import Preprocess (Comment)
+import Language.Boros.Syntax
+import Language.Boros.Val
+import Language.Boros.Intrinsics
+import Language.Boros.Preprocess (Comment)
 
 type Env = Map Ident Val
 type EvalCtx = ReaderT Env (ExceptT EvalError IO)

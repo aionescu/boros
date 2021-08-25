@@ -2,10 +2,10 @@ module Main where
 
 import System.Environment(getArgs)
 
-import Preprocess(comments, codeBlocks, applyComments, Code, inlineComments)
-import Parser(program, parse)
-import Val
-import Eval
+import Language.Boros.Preprocess(comments, codeBlocks, applyComments, Code, inlineComments)
+import Language.Boros.Parser(program, parse)
+import Language.Boros.Val
+import Language.Boros.Eval
 import Control.Monad.Except (ExceptT, MonadIO (liftIO), runExceptT)
 import Control.Monad (join)
 import System.IO (hSetBuffering, stdin, BufferMode (NoBuffering), stdout)

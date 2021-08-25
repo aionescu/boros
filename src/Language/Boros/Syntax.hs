@@ -1,4 +1,4 @@
-module Syntax where
+module Language.Boros.Syntax where
 
 import Text.PrettyPrint.GenericPretty
 
