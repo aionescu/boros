@@ -108,12 +108,7 @@ instance Eq Val where
 physEqVal :: Val -> Val -> Bool
 physEqVal (List a) (List b) = a == b
 physEqVal (Rec a) (Rec b) = a == b
-
-physEqVal (Fn a) (Fn b) =
-  case reallyUnsafePtrEquality# a b of
-    0# -> False
-    _ -> True
-
+physEqVal (Fn a) (Fn b) = boolFromInt# (reallyUnsafePtrEquality# a b)
 physEqVal a b = eqVal a b
 
 truthy :: Val -> Bool
