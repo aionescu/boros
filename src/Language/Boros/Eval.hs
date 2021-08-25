@@ -1,21 +1,21 @@
-module Language.Boros.Eval where
+module Language.Boros.Eval(Args, evalWithComments) where
 
-import Control.Monad.Except (throwError, ExceptT (ExceptT), runExceptT, liftEither)
-import Data.Map.Strict(Map)
-import qualified Data.Map.Strict as M
-import Control.Monad.IO.Class (MonadIO(liftIO))
+import Control.Monad.Except(ExceptT(ExceptT), throwError, runExceptT, liftEither)
+import Control.Monad.IO.Class(MonadIO(liftIO))
+import Control.Monad.Reader(MonadReader(ask, local), ReaderT, asks, runReaderT)
+import Data.Bifunctor(first)
+import Data.Functor(($>))
 import Data.IORef(IORef, newIORef, readIORef, writeIORef)
-import Control.Monad.Reader (MonadReader (ask, local), asks, ReaderT, runReaderT)
-import Data.Functor (($>))
-import Data.Bifunctor (first)
+import Data.Map.Strict(Map)
+import Data.Map.Strict qualified as M
+import Data.Text(Text)
+import Data.Text qualified as T
 
 import Utils
 import Language.Boros.Syntax
+import Language.Boros.Preprocess
 import Language.Boros.Val
 import Language.Boros.Intrinsics
-import Language.Boros.Preprocess (Comment)
-import Data.Text (Text)
-import qualified Data.Text as T
 
 type Env = Map Ident Val
 type EvalCtx = ReaderT Env (ExceptT EvalError IO)

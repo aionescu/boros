@@ -1,10 +1,11 @@
-module Language.Boros.Preprocess where
+module Language.Boros.Preprocess(Code, Comment, comments, codeBlocks, applyComments, inlineComments) where
 
 import Text.Parsec hiding (parse)
 
+import Data.Text(Text)
+import Data.Text qualified as T
+
 import Utils
-import Data.Text (Text)
-import qualified Data.Text as T
 
 type Code = Text
 type Comment = Text

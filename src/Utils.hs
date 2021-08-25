@@ -2,10 +2,10 @@ module Utils where
 
 import Control.Monad.Except(MonadError, liftEither)
 import Data.Bifunctor(first)
+import Data.Text(Text)
+import Data.Text qualified as T
+import GHC.Exts(Int#)
 import Text.Parsec(Parsec, runParser)
-import Data.Text (Text)
-import qualified Data.Text as T
-import GHC.Exts (Int#)
 
 showT :: Show a => a -> Text
 showT = T.pack . show

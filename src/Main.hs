@@ -1,19 +1,18 @@
 module Main where
 
+import Control.Monad(join)
+import Control.Monad.Except(ExceptT, MonadIO(liftIO), runExceptT)
+import Data.Text(Text)
+import Data.Text qualified as T
+import Data.Text.IO qualified as T.IO
 import System.Environment(getArgs)
+import System.IO(hSetBuffering, stdin, BufferMode (NoBuffering), stdout)
 
-import Utils(parse)
-import Language.Boros.Preprocess(comments, codeBlocks, applyComments, Code, inlineComments)
-import Language.Boros.Parser(program)
+import Utils
+import Language.Boros.Preprocess
+import Language.Boros.Parser
 import Language.Boros.Val
 import Language.Boros.Eval
-import Control.Monad.Except (ExceptT, MonadIO (liftIO), runExceptT)
-import Control.Monad (join)
-import System.IO (hSetBuffering, stdin, BufferMode (NoBuffering), stdout)
-
-import Data.Text(Text)
-import qualified Data.Text as T
-import qualified Data.Text.IO as T.IO
 
 getCode :: IO Text
 getCode = do

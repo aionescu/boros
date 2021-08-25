@@ -1,11 +1,11 @@
-module Language.Boros.Parser where
+module Language.Boros.Parser(ws, unit, intRaw, boolRaw, charRaw, strRaw, list, rec', program) where
 
 import Data.Foldable(foldl')
 import Data.Functor((<&>), ($>))
 import Data.List(nub)
-import Text.Parsec
 import Data.Text(Text)
-import qualified Data.Text as T
+import Data.Text qualified as T
+import Text.Parsec
 
 import Utils
 import Language.Boros.Syntax
@@ -16,9 +16,8 @@ reserved = ["let", "and", "in", "if", "then", "else", "true", "false"]
 reservedOps :: [Text]
 reservedOps = ["=", "->", "<-", ".", "||", "&&"]
 
-comma, colon, equals, shebang, ws :: Parser ()
+comma, equals, shebang, ws :: Parser ()
 comma = ws <* char ',' <* ws
-colon = ws <* char ':' <* ws
 equals = ws <* char '=' <* ws
 shebang = try $ string "#!" *> manyTill anyChar (endOfLine $> ()) $> ()
 ws = spaces

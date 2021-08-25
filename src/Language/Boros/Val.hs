@@ -1,25 +1,25 @@
 {-# LANGUAGE StrictData #-}
 
-module Language.Boros.Val where
+module Language.Boros.Val(Val(..), EvalError, compareVal, physEqVal, truthy, valType) where
 
-import Data.Map.Strict(Map)
-import qualified Data.Map.Strict as M
+import Data.Bifunctor(second)
+import Data.Foldable(toList)
+import Data.Functor(($>))
 import Data.IORef(IORef, readIORef, newIORef)
-import System.IO.Unsafe (unsafePerformIO)
+import Data.Map.Strict(Map)
+import Data.Map.Strict qualified as M
+import Data.Text(Text)
+import Data.Text qualified as T
+import Data.Typeable(Typeable)
+import Data.Void(Void)
+import GHC.Exts(reallyUnsafePtrEquality#)
+import System.IO.Unsafe(unsafePerformIO)
+import Text.Parsec(getInput, parse, choice, try, eof)
+import Unsafe.Coerce(unsafeCoerce)
 
 import Utils hiding (parse)
 import Language.Boros.Syntax
-import Unsafe.Coerce (unsafeCoerce)
-import Data.Void (Void)
-import Data.Typeable (Typeable)
-import GHC.Exts (reallyUnsafePtrEquality#)
 import Language.Boros.Parser
-import Text.Parsec (getInput, parse, choice, try, eof)
-import Data.Foldable (toList)
-import Data.Functor (($>))
-import Data.Text (Text)
-import qualified Data.Text as T
-import Data.Bifunctor (second)
 
 data Val
   = Unit

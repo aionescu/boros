@@ -1,22 +1,21 @@
-module Language.Boros.Intrinsics where
+module Language.Boros.Intrinsics(ToVal(..), OfVal(..), intrinsics) where
 
+import Data.Function(fix)
+import Data.Functor(($>))
+import Data.IORef(newIORef, readIORef, writeIORef)
 import Data.Map.Strict(Map)
-import qualified Data.Map.Strict as M
+import Data.Map.Strict qualified as M
+import Data.Text(Text)
+import Data.Text qualified as T
+import Data.Text.IO qualified as T.IO
+import Data.Typeable(Typeable, typeRep, Proxy (Proxy))
+import Data.Word(Word8)
+import System.IO.Unsafe(unsafePerformIO)
+import Text.Read(readMaybe)
 
 import Utils
 import Language.Boros.Syntax
 import Language.Boros.Val
-import Data.IORef (newIORef, readIORef, writeIORef)
-import System.IO.Unsafe (unsafePerformIO)
-import Data.Typeable (Typeable, typeRep, Proxy (Proxy))
-import Data.Function (fix)
-import Text.Read (readMaybe)
-import Data.Word (Word8)
-import Data.Functor (($>))
-
-import Data.Text(Text)
-import qualified Data.Text as T
-import qualified Data.Text.IO as T.IO
 
 class ToVal a where
   toVal :: a -> Val
