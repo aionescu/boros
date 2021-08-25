@@ -15,6 +15,9 @@ cradle:
     - path: "src/Language/Boros/Val.hs"
       component: "boros:exe:boros"
 
+    - path: "src/Language/Boros/FFI.hs"
+      component: "boros:exe:boros"
+
     - path: "src/Language/Boros/Intrinsics.hs"
       component: "boros:exe:boros"
 

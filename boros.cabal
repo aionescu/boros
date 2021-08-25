@@ -23,6 +23,7 @@ executable boros
     Language.Boros.Preprocess
     Language.Boros.Parser
     Language.Boros.Val
+    Language.Boros.FFI
     Language.Boros.Intrinsics
     Language.Boros.Eval
     Paths_boros

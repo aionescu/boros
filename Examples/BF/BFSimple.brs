@@ -1,14 +1,5 @@
 #!/usr/bin/env boros
 
-let iter f l =
-  let end = length l in
-  let go i =
-    if i != end then
-      (f l.[i]; go $ i + 1)
-  in
-  go 0
-in
-
 let wrap n =
   if n == 256 then
     0
@@ -26,13 +17,14 @@ let evalOp op =
   else if op == '-' then
     state.tape.[state.crr] <- wrap $ state.tape.[state.crr] - 1
   else if op == '<' then
-    if state.crr == 0 then
-      state.tape <- [0] + state.tape
-    else
+    if state.crr == 0 then (
+      state.crr <- length state.tape - 1;
+      state.tape <- replicate (length state.tape) 0 + state.tape
+    ) else
       state.crr <- state.crr - 1
   else if op == '>' then (
     if state.crr == length state.tape - 1 then
-      state.tape <- state.tape + [0];
+      state.tape <- state.tape + replicate (length state.tape) 0;
 
     state.crr <- state.crr + 1
   ) else if op == ',' then
@@ -45,29 +37,28 @@ let evalOp op =
 in
 
 let parse ops =
-  let end = length ops in
-  let go scope stack i =
-    if i == end then
-      if not stack then
-        reverse scope
-      else
-        throw "Unmatched '['"
-    else if contains ops.[i] "+-<>,." then
-      go ([ops.[i]] + scope) stack (i + 1)
-    else if ops.[i] == '[' then
-      go [] ([scope] + stack) (i + 1)
-    else if ops.[i] == ']' then
-      if not stack then
+  let _ = { scope = [], stack = [] } in
+
+  ops |> iter (op ->
+    if contains op "+-<>,." then
+      _.scope <- _.scope + [op]
+    else if op == '[' then (
+      _.stack <- [_.scope] + _.stack;
+      _.scope <- []
+    ) else if op == ']' then
+      if not _.stack then
         throw "Unmatched ']'"
       else
-        let parent = pop stack in
-        go ([reverse scope] + parent) stack (i + 1)
-    else
-      go scope stack (i + 1)
-  in
-  go [] [] 0
+        _.scope <- pop _.stack + [_.scope]
+  );
+
+  if not _.stack then
+    _.scope
+  else
+    throw "Unmatched '['"
 in
 
-let ops = parse $ readFile args.[0] in
-
-iter evalOp ops
+args.[0]
+|> readFile
+|> parse
+|> iter evalOp
