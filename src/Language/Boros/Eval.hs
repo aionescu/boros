@@ -1,8 +1,8 @@
 module Language.Boros.Eval where
 
 import Control.Monad.Except (throwError, ExceptT (ExceptT), runExceptT, liftEither)
-import Data.Map.Lazy(Map)
-import qualified Data.Map.Lazy as M
+import Data.Map.Strict(Map)
+import qualified Data.Map.Strict as M
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Data.IORef(IORef, newIORef, readIORef, writeIORef)
 import Control.Monad.Reader (MonadReader (ask, local), asks, ReaderT, runReaderT)

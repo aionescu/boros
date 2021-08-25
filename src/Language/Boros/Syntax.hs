@@ -1,3 +1,5 @@
+{-# LANGUAGE StrictData #-}
+
 module Language.Boros.Syntax where
 
 import Data.Text (Text)
