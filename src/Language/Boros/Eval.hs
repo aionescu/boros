@@ -1,7 +1,6 @@
 module Language.Boros.Eval where
 
 import Control.Monad.Except (throwError, ExceptT (ExceptT), runExceptT, liftEither)
-import Data.List (isPrefixOf)
 import Data.Map.Lazy(Map)
 import qualified Data.Map.Lazy as M
 import Control.Monad.IO.Class (MonadIO(liftIO))
@@ -15,11 +14,13 @@ import Language.Boros.Syntax
 import Language.Boros.Val
 import Language.Boros.Intrinsics
 import Language.Boros.Preprocess (Comment)
+import Data.Text (Text)
+import qualified Data.Text as T
 
 type Env = Map Ident Val
 type EvalCtx = ReaderT Env (ExceptT EvalError IO)
 
-type Args = [String]
+type Args = [Text]
 
 runEval :: Env -> EvalCtx a -> IO (Either EvalError a)
 runEval env m = runExceptT (runReaderT m env)
@@ -48,7 +49,7 @@ eval' (RecMember r f) = do
       m <- unref m'
       case m M.!? f of
         Just e -> pure e
-        Nothing -> throwError $ "Inexistent record field  " ++ show f
+        Nothing -> throwError $ "Inexistent record field  " <> showT f
     _ -> throwError "Tried to access member of a non-record"
 
 eval' (Index e idx) = do
@@ -70,7 +71,7 @@ eval' (Var i) = do
   var <- asks (M.!? i)
   case var of
     Just v -> pure v
-    Nothing -> throwError $ "Variable " ++ show i ++ " is not defined"
+    Nothing -> throwError $ "Variable " <> showT i <> " is not defined"
 
 eval' (Let bs e) = do
   let
@@ -150,13 +151,13 @@ eval' (Seq a b) = eval' a *> eval' b
 
 ofComm :: Val -> Comment
 ofComm (Str s) = s
-ofComm v = show v
+ofComm v = showT v
 
-showEvalError :: EvalError  -> String
+showEvalError :: EvalError  -> Text
 showEvalError "Halt" = "Halt"
 showEvalError ee
-  | "User-thrown" `isPrefixOf` ee = ee
-  | otherwise = "Runtime error: " ++ ee
+  | "User-thrown" `T.isPrefixOf` ee = ee
+  | otherwise = "Runtime error: " <> ee
 
 evalWithComments :: Args -> [Comment] -> Expr -> ExceptT EvalError IO ([Comment], Val)
 evalWithComments args comms expr = do

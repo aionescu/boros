@@ -1,13 +1,13 @@
 module Language.Boros.Syntax where
 
-import Text.PrettyPrint.GenericPretty
+import Data.Text (Text)
 
-type Ident = String
+type Ident = Text
 
 data Expr
   = NumLit Integer
   | BoolLit Bool
-  | StrLit String
+  | StrLit Text
   | UnitLit
   | ListLit [Expr]
   | RecLit [(Ident, Expr)]
@@ -22,11 +22,3 @@ data Expr
   | Assign Expr Expr
   | If Expr Expr Expr
   | Seq Expr Expr
-  deriving stock Generic
-  deriving anyclass Out
-
-showExpr :: Expr -> String
-showExpr = pretty
-
-printExpr :: Expr -> IO ()
-printExpr = pp

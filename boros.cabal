@@ -35,12 +35,11 @@ executable boros
   build-depends:
     base >=4.13 && <5
     , containers ^>= 0.6.2
-    , unordered-containers ^>= 0.2.14
     , mtl ^>= 2.2.2
     , optparse-applicative ^>= 0.16.1
     , parsec ^>= 3.1.14
     , split ^>= 0.2.3
-    , GenericPretty ^>= 1.2.2
+    , text ^>= 1.2.5
 
   ghc-options:
     -threaded
@@ -77,6 +76,7 @@ executable boros
     MultiParamTypeClasses
     MultiWayIf
     NamedFieldPuns
+    OverloadedStrings
     PatternSynonyms
     RankNTypes
     RecordWildCards

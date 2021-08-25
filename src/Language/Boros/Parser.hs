@@ -4,14 +4,16 @@ import Data.Foldable(foldl')
 import Data.Functor((<&>), ($>))
 import Data.List(nub)
 import Text.Parsec
+import Data.Text(Text)
+import qualified Data.Text as T
 
 import Utils
 import Language.Boros.Syntax
 
-reserved :: [String]
+reserved :: [Text]
 reserved = ["let", "and", "in", "if", "then", "else", "true", "false"]
 
-reservedOps :: [String]
+reservedOps :: [Text]
 reservedOps = ["=", "->", "<-", ".", "||", "&&"]
 
 comma, colon, equals, shebang, ws :: Parser ()
@@ -41,8 +43,8 @@ intRaw = sign <*> number
 boolRaw :: Parser Bool
 boolRaw = choice [string "true" $> True, string "false" $> False]
 
-strRaw :: Parser String
-strRaw = between quote quote $ many ch
+strRaw :: Parser Text
+strRaw = T.pack <$> between quote quote (many ch)
   where
     unescape '\\' = '\\'
     unescape '"' = '"'
@@ -89,8 +91,8 @@ rec' mk el = mk <$> parens '{' '}' (unique =<< field `sepEndBy` comma)
           then pure es
           else fail "Fields in a record must be unique"
 
-varIdent :: Parser String
-varIdent = notReserved =<< (:) <$> fstChar <*> many sndChar <* ws
+varIdent :: Parser Text
+varIdent = notReserved =<< T.pack ... (:) <$> fstChar <*> many sndChar <* ws
   where
     fstChar = choice [letter, char '_']
     sndChar = choice [letter, digit, char '_', char '\'']
@@ -100,17 +102,17 @@ varIdent = notReserved =<< (:) <$> fstChar <*> many sndChar <* ws
 opChar :: Parser Char
 opChar = oneOf "~!@#$%^&*-=+\\|:<.>/?"
 
-notReservedOp :: String -> Parser String
+notReservedOp :: Text -> Parser Text
 notReservedOp ((`elem` reservedOps) -> True) = fail "Reserved operator"
 notReservedOp i = pure i
 
-opIdent :: Parser String
-opIdent = notReservedOp =<< many1 opChar
+opIdent :: Parser Text
+opIdent = notReservedOp . T.pack =<< many1 opChar
 
-opIdentWith :: String -> Parser String
-opIdentWith cs = notReservedOp  =<< (:) <$> oneOf cs <*> many opChar
+opIdentWith :: [Char] -> Parser Text
+opIdentWith cs = notReservedOp  =<< T.pack ... (:) <$> oneOf cs <*> many opChar
 
-ident :: Parser String
+ident :: Parser Ident
 ident = try (parens '(' ')' opIdent) <|> varIdent
 
 var :: Parser Expr
@@ -123,7 +125,7 @@ if' =
   <*> (string "then" *> ws *> exprNoSeq <* ws)
   <*> option UnitLit (string "else" *> ws *> exprNoSeq <* ws)
 
-unrollLam :: [String] -> Expr -> Expr
+unrollLam :: [Ident] -> Expr -> Expr
 unrollLam as e = foldr Lam e as
 
 lam :: Parser Expr
@@ -150,7 +152,7 @@ exprApp = chainl1 exprNoOps (ws $> App)
 
 data Assoc = L | R
 
-precedenceTable :: [(String, Assoc)]
+precedenceTable :: [([Char], Assoc)]
 precedenceTable =
   [ ("^", R)
   , ("*/%", L)
@@ -165,10 +167,10 @@ chain :: Assoc -> Parser a -> Parser (a -> a -> a) -> Parser a
 chain L = chainl1
 chain R = chainr1
 
-op :: String -> Parser (Expr -> Expr -> Expr)
+op :: [Char] -> Parser (Expr -> Expr -> Expr)
 op cs = binOp <$> try (opIdentWith cs <* ws)
   where
-    binOp :: String -> Expr -> Expr -> Expr
+    binOp :: Text -> Expr -> Expr -> Expr
     binOp op' a = App (App (Var op') a)
 
 exprOps :: Parser Expr

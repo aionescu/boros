@@ -11,12 +11,16 @@ import Control.Monad.Except (ExceptT, MonadIO (liftIO), runExceptT)
 import Control.Monad (join)
 import System.IO (hSetBuffering, stdin, BufferMode (NoBuffering), stdout)
 
-getCode :: IO String
+import Data.Text(Text)
+import qualified Data.Text as T
+import qualified Data.Text.IO as T.IO
+
+getCode :: IO Text
 getCode = do
   (path : _) <- getArgs
   case path of
-    "-" -> getContents
-    _ -> readFile path
+    "-" -> T.IO.getContents
+    _ -> T.IO.readFile path
 
 runOnce :: Args ->  Code -> ExceptT EvalError IO (Maybe Code)
 runOnce args input = do
@@ -41,7 +45,7 @@ runAll args code = do
   result <- runExceptT $ runOnce args code
   case result of
     Left "Halt" -> pure ()
-    Left err -> putStrLn err
+    Left err -> T.IO.putStrLn err
     Right Nothing -> pure ()
     Right (Just newCode) -> runAll args newCode
 
@@ -49,4 +53,4 @@ main :: IO ()
 main = do
   hSetBuffering stdin NoBuffering
   hSetBuffering stdout NoBuffering
-  join $ runAll <$> (tail <$> getArgs) <*> getCode
+  join $ runAll <$> ((T.pack <$>) . tail <$> getArgs) <*> getCode

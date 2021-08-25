@@ -3,9 +3,7 @@ module Language.Boros.Val where
 import Data.Map.Lazy(Map)
 import qualified Data.Map.Lazy as M
 import Data.IORef(IORef, readIORef, newIORef)
-import Data.Char (toLower)
 import System.IO.Unsafe (unsafePerformIO)
-import Data.List (intercalate)
 
 import Utils hiding (parse)
 import Language.Boros.Syntax
@@ -17,33 +15,36 @@ import Language.Boros.Parser
 import Text.Parsec (getInput, parse, choice, try, eof)
 import Data.Foldable (toList)
 import Data.Functor (($>))
+import Data.Text (Text)
+import qualified Data.Text as T
+import Data.Bifunctor (second)
 
 data Val
   = Unit
   | Num Integer
   | Bool Bool
-  | Str String
+  | Str Text
   | List (IORef [Val])
   | Rec (IORef (Map Ident Val))
   | Fn (Val -> IO (Either EvalError Val))
   deriving stock Typeable
 
-type EvalError = String
+type EvalError = Text
 
 type SeenVals = [IORef Void]
 
-showArr :: SeenVals -> [Val] -> String
-showArr seen a = "[" ++ intercalate ", " (showVal seen <$> a) ++ "]"
+showArr :: SeenVals -> [Val] -> Text
+showArr seen a = "[" <> T.intercalate ", " (showVal seen <$> a) <> "]"
 
-showField :: SeenVals -> Ident -> Val -> String
-showField seen f v = f ++ " = " ++ showVal seen v
+showField :: SeenVals -> Ident -> Val -> Text
+showField seen f v = f <> " = " <> showVal seen v
 
-showRec :: SeenVals -> Map Ident Val -> String
+showRec :: SeenVals -> Map Ident Val -> Text
 showRec seen m
   | M.null m = "{ }"
-  | otherwise = "{ " ++ intercalate ", " (uncurry (showField seen) <$> M.toList m) ++ " }"
+  | otherwise = "{ " <> T.intercalate ", " (uncurry (showField seen) <$> M.toList m) <> " }"
 
-guardCycle :: SeenVals -> IORef a -> IO String -> String
+guardCycle :: SeenVals -> IORef a -> IO Text -> Text
 guardCycle seen r s =
   if unsafeCoerce r `elem` seen
   then "<∞>"
@@ -52,22 +53,22 @@ guardCycle seen r s =
 addSeen :: IORef a -> SeenVals -> SeenVals
 addSeen = (:) . unsafeCoerce
 
-escapeComms :: Char -> String
+escapeComms :: Char -> Text
 escapeComms c
-  | c `elem` "{-}" = ['\\', c]
-  | otherwise = [c]
+  | c `elem` ['{', '-', '}'] = T.pack ['\\', c]
+  | otherwise = T.singleton c
 
-showVal :: SeenVals -> Val -> String
+showVal :: SeenVals -> Val -> Text
 showVal _ Unit = "()"
-showVal _ (Num n) = show n
-showVal _ (Bool b) = toLower <$> show b
-showVal _ (Str s) = escapeComms =<< show s
+showVal _ (Num n) = showT n
+showVal _ (Bool b) = T.toLower $ showT b
+showVal _ (Str s) = T.concatMap escapeComms $ showT s
 showVal seen (List a) = guardCycle seen a $ showArr (addSeen a seen) <$> readIORef a
 showVal seen (Rec r) = guardCycle seen r $ showRec (addSeen r seen) <$> readIORef r
 showVal _ Fn{} = "<λ>"
 
 instance Show Val where
-  show = showVal []
+  show = T.unpack . showVal []
 
 compareVal :: Val -> Val -> Either EvalError Ordering
 compareVal Unit Unit = pure EQ
@@ -113,12 +114,12 @@ truthy :: Val -> Bool
 truthy Unit = True
 truthy (Num n) = n /= 0
 truthy (Bool b) = b
-truthy (Str s) = not $ null s
+truthy (Str s) = not $ T.null s
 truthy (List a) = unsafePerformIO $ not . null <$> readIORef a
 truthy (Rec r) = unsafePerformIO $ not . M.null <$> readIORef r
 truthy Fn{} = True
 
-valType :: Val -> String
+valType :: Val -> Text
 valType Unit = "()"
 valType Num{} = "Num"
 valType Bool{} = "Bool"
@@ -151,8 +152,8 @@ pVal' = choice $ try <$> [recVal, listVal, strVal, boolVal, numVal, unitVal]
 pVal :: Parser Val
 pVal = ws *> pVal' <* ws <* eof
 
-withRest :: Parser a -> Parser (a, String)
+withRest :: Parser a -> Parser (a, Text)
 withRest p = (,) <$> p <*> getInput
 
 instance Read Val where
-  readsPrec _ = toList . parse (withRest pVal) ""
+  readsPrec _ = (second T.unpack <$>) . toList . parse (withRest pVal) "" . T.pack

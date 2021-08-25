@@ -3,14 +3,20 @@ module Utils where
 import Control.Monad.Except(MonadError, liftEither)
 import Data.Bifunctor(first)
 import Text.Parsec(Parsec, runParser)
+import Data.Text (Text)
+import qualified Data.Text as T
 
-type Parser = Parsec String ()
+showT :: Show a => a -> Text
+showT = T.pack . show
 
-parse :: MonadError String m => Parser a -> String -> m a
-parse p = liftEither . first (("Parser error:\n" ++) . show) . runParser p () ""
+type Parser = Parsec Text ()
+
+parse :: MonadError Text m => Parser a -> Text -> m a
+parse p = liftEither . first (("Parser error:\n" <>) . showT) . runParser p () ""
 
 (...) :: (c -> d) -> (a -> b -> c) -> a -> b -> d
 (...) = (.) . (.)
+infixr 9 ...
 
 (!?) :: (Num i, Ord i) => [a] -> i -> Maybe a
 (a : _) !? 0 = Just a
