@@ -43,6 +43,28 @@ intRaw = sign <*> number
 boolRaw :: Parser Bool
 boolRaw = choice [string "true" $> True, string "false" $> False]
 
+charRaw :: Parser Char
+charRaw = between quote quote ch
+  where
+    unescape '\\' = '\\'
+    unescape '\'' = '\''
+    unescape '0' = '\0'
+    unescape 'n' = '\n'
+    unescape 'r' = '\r'
+    unescape 'v' = '\v'
+    unescape 't' = '\t'
+    unescape 'b' = '\b'
+    unescape 'f' = '\f'
+    unescape '{' = '{'
+    unescape '-' = '-'
+    unescape '}' = '}'
+    unescape a = a
+
+    escaped = char '\\' *> oneOf "\\'0nrvtbf{-}" <&> unescape
+    regular = noneOf "\\'\0\n\r\v\t\b\f"
+    ch = regular <|> escaped
+    quote = char '\''
+
 strRaw :: Parser Text
 strRaw = T.pack <$> between quote quote (many ch)
   where
@@ -65,17 +87,20 @@ strRaw = T.pack <$> between quote quote (many ch)
     ch = regular <|> escaped
     quote = char '"'
 
-num :: Parser Expr
-num = NumLit <$> intRaw
+numLit :: Parser Expr
+numLit = NumLit <$> intRaw
 
-bool :: Parser Expr
-bool = BoolLit <$> boolRaw
+boolLit :: Parser Expr
+boolLit = BoolLit <$> boolRaw
 
-str :: Parser Expr
-str = StrLit <$> strRaw
+charLit :: Parser Expr
+charLit = CharLit <$> charRaw
+
+strLit :: Parser Expr
+strLit = StrLit <$> strRaw
 
 simpleLit :: Parser Expr
-simpleLit = choice [try str, try num, bool]
+simpleLit = choice [try strLit, try charLit, try numLit, boolLit]
 
 list :: ([a] -> a) -> Parser a -> Parser a
 list mk el = parens '[' ']' $ mk <$> el `sepEndBy` comma

@@ -9,6 +9,7 @@ type Ident = Text
 data Expr
   = NumLit Integer
   | BoolLit Bool
+  | CharLit Char
   | StrLit Text
   | UnitLit
   | ListLit [Expr]

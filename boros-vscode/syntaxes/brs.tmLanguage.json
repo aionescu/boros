@@ -7,7 +7,8 @@
 		{ "include": "#bools" },
 		{ "include": "#intrinsics" },
 		{ "include": "#comments" },
-		{ "include": "#strings" }
+		{ "include": "#strings" },
+		{ "include": "#chars" }
 	],
 	"repository": {
 		"keywords": {
@@ -55,6 +56,19 @@
 				{
 					"name": "constant.character.escape.brs",
 					"match": "\\\\."
+				}
+			]
+		},
+    "chars": {
+			"name": "string.quoted.single.brs",
+			"patterns": [
+				{
+					"name": "constant.character.escape.brs",
+					"match": "'\\\\.'"
+        },
+        {
+					"name": "string.quoted.single.brs",
+					"match": "'.'"
 				}
 			]
 		}

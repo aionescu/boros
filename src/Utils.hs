@@ -5,6 +5,7 @@ import Data.Bifunctor(first)
 import Text.Parsec(Parsec, runParser)
 import Data.Text (Text)
 import qualified Data.Text as T
+import GHC.Exts (Int#)
 
 showT :: Show a => a -> Text
 showT = T.pack . show
@@ -27,3 +28,7 @@ replaceAt :: (Num i, Ord i) => [a] -> i -> a -> Maybe [a]
 replaceAt (_ : as) 0 v = Just $ v : as
 replaceAt (a : as) i v | i > 0 = (a :) <$> replaceAt as (i - 1) v
 replaceAt _ _ _ = Nothing
+
+boolFromInt# :: Int# -> Bool
+boolFromInt# 0# = False
+boolFromInt# _ = True

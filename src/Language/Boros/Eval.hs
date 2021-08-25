@@ -37,6 +37,7 @@ unref = liftIO . readIORef
 eval' :: Expr -> EvalCtx Val
 eval' (NumLit n) = pure $ Num n
 eval' (BoolLit b) = pure $ Bool b
+eval' (CharLit c) = pure $ Char c
 eval' (StrLit s) = pure $ Str s
 eval' UnitLit = pure Unit
 eval' (ListLit es) = List <$> (ref =<< traverse eval' es)
@@ -59,13 +60,18 @@ eval' (Index e idx) = do
   case i of
     Num n ->
       case list of
+        Str s ->
+          let n' = fromInteger n in
+            if n' < 0 || n' >= T.length s
+            then throwError "String index out of range"
+            else pure $ Char $ T.index s n'
         List vs' -> do
           vs <- unref vs'
           case vs !? n of
             Just v -> pure v
             Nothing -> throwError "List index out of range"
-        _ -> throwError "Tried to index into a non-list"
-    _ -> throwError "List index is not of type Num"
+        _ -> throwError "Can only index into lists and strings"
+    _ -> throwError "Index is not of type Num"
 
 eval' (Var i) = do
   var <- asks (M.!? i)
@@ -126,6 +132,7 @@ eval' (Assign (Index e i) v) = do
             Just newL -> liftIO (writeIORef l' newL) $> Unit
             Nothing -> throwError "Tried to assign to out-of-rangee index"
         _ -> throwError "Tried to assign to non-numeric index"
+    Str _ -> throwError "Strings are immutable"
     _ -> throwError "Tried to assign an index in a non-list"
 
 eval' (Assign (RecMember e f) v) = do

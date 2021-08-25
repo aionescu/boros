@@ -65,6 +65,13 @@ instance OfVal Bool where
   ofVal (Bool b) = Just b
   ofVal _ = Nothing
 
+instance ToVal Char where
+  toVal = Char
+
+instance OfVal Char where
+  ofVal (Char c) = Just c
+  ofVal _ = Nothing
+
 instance ToVal Text where
   toVal = Str
 
@@ -146,9 +153,6 @@ getChar' _ = fromIntegral . fromEnum <$> getChar
 putChar' :: Word8 -> IO ()
 putChar' = putChar . toEnum . fromIntegral
 
-explode :: Text -> [Text]
-explode = (T.singleton <$>) . T.unpack
-
 pop :: Val -> IO (Either EvalError Val)
 pop (List l') = do
   l <- readIORef l'
@@ -156,6 +160,21 @@ pop (List l') = do
     [] -> pure $ Left "Empty list in `pop`"
     (a : as) -> writeIORef l' as $> Right a
 pop _ = pure $ Left "Non-list in `pop`"
+
+length' :: Val -> IO (Either EvalError Int)
+length' (Str s) = pure $ pure $ T.length s
+length' (List l) = pure . length <$> readIORef l
+length' _ = pure $ Left "Can only take the length of lists and strings"
+
+reverse' :: Val -> IO (Either EvalError Val)
+reverse' (Str s) = pure $ pure $ Str $ T.reverse s
+reverse' (List l) = pure . List <$> (newIORef . reverse =<< readIORef l)
+reverse' _ = pure $ Left "Can only reverse lists and strings"
+
+contains' :: Val -> Val -> IO (Either EvalError Bool)
+contains' (Char c) (Str s) = pure $ pure $ T.elem c s
+contains' v (List l) = pure . elem v <$> readIORef l
+contains' _ _ = pure $ Left "Invalid values in `reverse`"
 
 throw :: Val -> Either EvalError Val
 throw v = Left $ "User-thrown exception: " <> showT v
@@ -206,9 +225,10 @@ intrinsics =
   , ("show", toVal $ showT @Val)
   , ("read", toVal read')
 
-  , ("length", toVal $ length @[] @Val)
-  , ("explode", toVal explode)
+  , ("length", toVal length')
+  , ("explode", toVal T.unpack)
+  , ("implode", toVal T.pack)
   , ("pop", toVal pop)
-  , ("reverse", toVal $ reverse @Val)
-  , ("contains", toVal $ flip $ elem @[] @Val)
+  , ("reverse", toVal reverse')
+  , ("contains", toVal contains')
   ]

@@ -12,7 +12,7 @@ import Language.Boros.Syntax
 import Unsafe.Coerce (unsafeCoerce)
 import Data.Void (Void)
 import Data.Typeable (Typeable)
-import GHC.Base (reallyUnsafePtrEquality#)
+import GHC.Exts (reallyUnsafePtrEquality#)
 import Language.Boros.Parser
 import Text.Parsec (getInput, parse, choice, try, eof)
 import Data.Foldable (toList)
@@ -25,6 +25,7 @@ data Val
   = Unit
   | Num Integer
   | Bool Bool
+  | Char Char
   | Str Text
   | List (IORef [Val])
   | Rec (IORef (Map Ident Val))
@@ -64,6 +65,7 @@ showVal :: SeenVals -> Val -> Text
 showVal _ Unit = "()"
 showVal _ (Num n) = showT n
 showVal _ (Bool b) = T.toLower $ showT b
+showVal _ (Char c) = T.concatMap escapeComms $ showT c
 showVal _ (Str s) = T.concatMap escapeComms $ showT s
 showVal seen (List a) = guardCycle seen a $ showArr (addSeen a seen) <$> readIORef a
 showVal seen (Rec r) = guardCycle seen r $ showRec (addSeen r seen) <$> readIORef r
@@ -76,6 +78,7 @@ compareVal :: Val -> Val -> Either EvalError Ordering
 compareVal Unit Unit = pure EQ
 compareVal (Num a) (Num b) = pure $ compare a b
 compareVal (Bool a) (Bool b) = pure $ compare a b
+compareVal (Char a) (Char b) = pure $ compare a b
 compareVal (Str a) (Str b) = pure $ compare a b
 compareVal _ _ = Left "Invalid values in comparison"
 
@@ -83,6 +86,7 @@ eqVal :: Val -> Val -> Bool
 eqVal Unit Unit = True
 eqVal (Num a) (Num b) = a == b
 eqVal (Bool a) (Bool b) = a == b
+eqVal (Char a) (Char b) = a == b
 eqVal (Str a) (Str b) = a == b
 
 eqVal (List a') (List b') = a' == b' || unsafePerformIO do
@@ -116,6 +120,7 @@ truthy :: Val -> Bool
 truthy Unit = True
 truthy (Num n) = n /= 0
 truthy (Bool b) = b
+truthy (Char c) = fromEnum c /= 0
 truthy (Str s) = not $ T.null s
 truthy (List a) = unsafePerformIO $ not . null <$> readIORef a
 truthy (Rec r) = unsafePerformIO $ not . M.null <$> readIORef r
@@ -125,6 +130,7 @@ valType :: Val -> Text
 valType Unit = "()"
 valType Num{} = "Num"
 valType Bool{} = "Bool"
+valType Char{} = "Char"
 valType Str{} = "Str"
 valType List{} = "List"
 valType Rec{} = "Rec"
@@ -139,6 +145,9 @@ numVal = Num <$> intRaw
 boolVal :: Parser Val
 boolVal = Bool <$> boolRaw
 
+charVal :: Parser Val
+charVal = Char <$> charRaw
+
 strVal :: Parser Val
 strVal = Str <$> strRaw
 
@@ -149,7 +158,7 @@ recVal :: Parser Val
 recVal = rec' (Rec . unsafePerformIO . newIORef . M.fromList) pVal
 
 pVal' :: Parser Val
-pVal' = choice $ try <$> [recVal, listVal, strVal, boolVal, numVal, unitVal]
+pVal' = choice $ try <$> [recVal, listVal, strVal, charVal, boolVal, numVal, unitVal]
 
 pVal :: Parser Val
 pVal = ws *> pVal' <* ws <* eof
