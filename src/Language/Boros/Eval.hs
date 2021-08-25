@@ -81,19 +81,18 @@ eval' (Var i) = do
     Just v -> pure v
     Nothing -> throwError $ "Variable " ++ show i ++ " is not defined"
 
-eval' (Let bs e) = mdo
+eval' (Let bs e) = do
   let
     isLam Lam{} = True
     isLam _ = False
 
-    fs = filter (isLam . snd) bs
-    vs = filter (not . isLam . snd) bs
-
-  fs' <- local (M.union fs') $ traverse eval' $ M.fromList fs
-
-  local (M.union fs') do
-      vs' <- traverse eval' $ M.fromList vs
-      local (M.union vs') $ eval' e
+  if all (isLam . snd) bs
+    then mdo
+      fs <- local (M.union fs) $ traverse eval' $ M.fromList bs
+      local (M.union fs) $ eval' e
+    else do
+      vs <- traverse eval' $ M.fromList bs
+      local (M.union vs) $ eval' e
 
 eval' (Lam i e) = do
   env <- ask
