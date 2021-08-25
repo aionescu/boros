@@ -9,6 +9,8 @@ import Data.Text(Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T.IO
 import Data.Typeable(Typeable, typeRep, Proxy (Proxy))
+import Data.Vector(Vector)
+import Data.Vector qualified as V
 import Data.Word(Word8)
 import System.IO.Unsafe(unsafePerformIO)
 import Text.Read(readMaybe)
@@ -78,10 +80,10 @@ instance OfVal Text where
   ofVal (Str s) = Just s
   ofVal _ = Nothing
 
-instance ToVal a => ToVal [a] where
+instance ToVal a => ToVal (Vector a) where
   toVal l = unsafePerformIO $ List <$> newIORef (toVal <$> l)
 
-instance OfVal a => OfVal [a] where
+instance OfVal a => OfVal (Vector a) where
   ofVal (List l) = unsafePerformIO $ traverse ofVal <$> readIORef l
   ofVal _ = Nothing
 
@@ -155,9 +157,9 @@ putChar' = putChar . toEnum . fromIntegral
 pop :: Val -> IO (Either EvalError Val)
 pop (List l') = do
   l <- readIORef l'
-  case l of
-    [] -> pure $ Left "Empty list in `pop`"
-    (a : as) -> writeIORef l' as $> Right a
+  case V.uncons l of
+    Nothing -> pure $ Left "Empty list in `pop`"
+    Just (a, as) -> writeIORef l' as $> Right a
 pop _ = pure $ Left "Non-list in `pop`"
 
 length' :: Val -> IO (Either EvalError Int)
@@ -167,12 +169,12 @@ length' _ = pure $ Left "Can only take the length of lists and strings"
 
 reverse' :: Val -> IO (Either EvalError Val)
 reverse' (Str s) = pure $ pure $ Str $ T.reverse s
-reverse' (List l) = pure . List <$> (newIORef . reverse =<< readIORef l)
+reverse' (List l) = pure . List <$> (newIORef . V.reverse =<< readIORef l)
 reverse' _ = pure $ Left "Can only reverse lists and strings"
 
 contains' :: Val -> Val -> IO (Either EvalError Bool)
 contains' (Char c) (Str s) = pure $ pure $ T.elem c s
-contains' v (List l) = pure . elem v <$> readIORef l
+contains' v (List l) = pure . V.elem v <$> readIORef l
 contains' _ _ = pure $ Left "Invalid values in `reverse`"
 
 throw :: Val -> Either EvalError Val
@@ -225,8 +227,8 @@ intrinsics =
   , ("read", toVal read')
 
   , ("length", toVal length')
-  , ("explode", toVal T.unpack)
-  , ("implode", toVal T.pack)
+  , ("explode", toVal $ V.fromList . T.unpack)
+  , ("implode", toVal $ T.pack . V.toList)
   , ("pop", toVal pop)
   , ("reverse", toVal reverse')
   , ("contains", toVal contains')

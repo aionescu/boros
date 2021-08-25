@@ -5,6 +5,7 @@ import Control.Monad.Except(ExceptT, MonadIO(liftIO), runExceptT)
 import Data.Text(Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as T.IO
+import Data.Vector qualified as V
 import System.Environment(getArgs)
 import System.IO(hSetBuffering, stdin, BufferMode (NoBuffering), stdout)
 
@@ -21,7 +22,7 @@ getCode = do
     "-" -> T.IO.getContents
     _ -> T.IO.readFile path
 
-runOnce :: Args ->  Code -> ExceptT EvalError IO (Maybe Code)
+runOnce :: Args -> Code -> ExceptT EvalError IO (Maybe Code)
 runOnce args input = do
   comms <- parse comments input
   codes <- parse codeBlocks input
@@ -52,4 +53,4 @@ main :: IO ()
 main = do
   hSetBuffering stdin NoBuffering
   hSetBuffering stdout NoBuffering
-  join $ runAll <$> ((T.pack <$>) . tail <$> getArgs) <*> getCode
+  join $ runAll <$> (V.fromList . (T.pack <$>) . tail <$> getArgs) <*> getCode

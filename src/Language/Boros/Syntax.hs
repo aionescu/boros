@@ -3,6 +3,7 @@
 module Language.Boros.Syntax where
 
 import Data.Text(Text)
+import Data.Vector(Vector)
 
 type Ident = Text
 
@@ -12,7 +13,7 @@ data Expr
   | CharLit Char
   | StrLit Text
   | UnitLit
-  | ListLit [Expr]
+  | ListLit (Vector Expr)
   | RecLit [(Ident, Expr)]
   | RecMember Expr Ident
   | Index Expr Expr

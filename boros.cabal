@@ -40,6 +40,7 @@ executable boros
     , parsec ^>= 3.1.14
     , split ^>= 0.2.3
     , text ^>= 1.2.5
+    , vector ^>= 0.12.3
 
   ghc-options:
     -threaded

@@ -2,9 +2,13 @@ module Utils where
 
 import Control.Monad.Except(MonadError, liftEither)
 import Data.Bifunctor(first)
+import Data.Vector(Vector)
+import Data.Vector qualified as V
+import Data.Vector.Mutable qualified as VM
 import Data.Text(Text)
 import Data.Text qualified as T
 import GHC.Exts(Int#)
+import System.IO.Unsafe(unsafePerformIO)
 import Text.Parsec(Parsec, runParser)
 
 showT :: Show a => a -> Text
@@ -32,3 +36,9 @@ replaceAt _ _ _ = Nothing
 boolFromInt# :: Int# -> Bool
 boolFromInt# 0# = False
 boolFromInt# _ = True
+
+vecOverlaps :: Vector a -> Vector a -> Bool
+vecOverlaps a b = unsafePerformIO $ VM.overlaps <$> V.unsafeThaw a <*> V.unsafeThaw b
+
+vecCopy :: Vector a -> Vector a
+vecCopy = unsafePerformIO . V.freeze . unsafePerformIO . V.unsafeThaw

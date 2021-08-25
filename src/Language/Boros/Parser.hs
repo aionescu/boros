@@ -5,6 +5,8 @@ import Data.Functor((<&>), ($>))
 import Data.List(nub)
 import Data.Text(Text)
 import Data.Text qualified as T
+import Data.Vector(Vector)
+import Data.Vector qualified as V
 import Text.Parsec
 
 import Utils
@@ -101,8 +103,8 @@ strLit = StrLit <$> strRaw
 simpleLit :: Parser Expr
 simpleLit = choice [try strLit, try charLit, try numLit, boolLit]
 
-list :: ([a] -> a) -> Parser a -> Parser a
-list mk el = parens '[' ']' $ mk <$> el `sepEndBy` comma
+list :: (Vector a -> a) -> Parser a -> Parser a
+list mk el = parens '[' ']' $ mk . V.fromList <$> el `sepEndBy` comma
 
 rec' :: ([(Ident, a)] -> a) -> Parser a -> Parser a
 rec' mk el = mk <$> parens '{' '}' (unique =<< field `sepEndBy` comma)
@@ -112,8 +114,8 @@ rec' mk el = mk <$> parens '{' '}' (unique =<< field `sepEndBy` comma)
       let es' = fst <$> es
       in
         if nub es' == es'
-          then pure es
-          else fail "Fields in a record must be unique"
+        then pure es
+        else fail "Fields in a record must be unique"
 
 varIdent :: Parser Text
 varIdent = notReserved =<< T.pack ... (:) <$> fstChar <*> many sndChar <* ws

@@ -11,6 +11,8 @@ import Data.Map.Strict qualified as M
 import Data.Text(Text)
 import Data.Text qualified as T
 import Data.Typeable(Typeable)
+import Data.Vector(Vector)
+import Data.Vector qualified as V
 import Data.Void(Void)
 import GHC.Exts(reallyUnsafePtrEquality#)
 import System.IO.Unsafe(unsafePerformIO)
@@ -27,7 +29,7 @@ data Val
   | Bool Bool
   | Char Char
   | Str Text
-  | List (IORef [Val])
+  | List (IORef (Vector Val))
   | Rec (IORef (Map Ident Val))
   | Fn (Val -> IO (Either EvalError Val))
   deriving stock Typeable
@@ -36,8 +38,8 @@ type EvalError = Text
 
 type SeenVals = [IORef Void]
 
-showArr :: SeenVals -> [Val] -> Text
-showArr seen a = "[" <> T.intercalate ", " (showVal seen <$> a) <> "]"
+showList' :: SeenVals -> Vector Val -> Text
+showList' seen l = "[" <> T.intercalate ", " (showVal seen <$> V.toList l) <> "]"
 
 showField :: SeenVals -> Ident -> Val -> Text
 showField seen f v = f <> " = " <> showVal seen v
@@ -67,7 +69,7 @@ showVal _ (Num n) = showT n
 showVal _ (Bool b) = T.toLower $ showT b
 showVal _ (Char c) = T.concatMap escapeComms $ showT c
 showVal _ (Str s) = T.concatMap escapeComms $ showT s
-showVal seen (List a) = guardCycle seen a $ showArr (addSeen a seen) <$> readIORef a
+showVal seen (List a) = guardCycle seen a $ showList' (addSeen a seen) <$> readIORef a
 showVal seen (Rec r) = guardCycle seen r $ showRec (addSeen r seen) <$> readIORef r
 showVal _ Fn{} = "<λ>"
 

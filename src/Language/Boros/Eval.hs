@@ -8,6 +8,9 @@ import Data.Functor(($>))
 import Data.IORef(IORef, newIORef, readIORef, writeIORef)
 import Data.Map.Strict(Map)
 import Data.Map.Strict qualified as M
+import Data.Vector(Vector)
+import Data.Vector qualified as V
+import Data.Vector.Mutable qualified as MV
 import Data.Text(Text)
 import Data.Text qualified as T
 
@@ -20,7 +23,7 @@ import Language.Boros.Intrinsics
 type Env = Map Ident Val
 type EvalCtx = ReaderT Env (ExceptT EvalError IO)
 
-type Args = [Text]
+type Args = Vector Text
 
 runEval :: Env -> EvalCtx a -> IO (Either EvalError a)
 runEval env m = runExceptT (runReaderT m env)
@@ -67,7 +70,7 @@ eval' (Index e idx) = do
             else pure $ Char $ T.index s n'
         List vs' -> do
           vs <- unref vs'
-          case vs !? n of
+          case vs V.!? fromInteger n of
             Just v -> pure v
             Nothing -> throwError "List index out of range"
         _ -> throwError "Can only index into lists and strings"
@@ -127,10 +130,15 @@ eval' (Assign (Index e i) v) = do
     List l' ->
       case i' of
         Num n -> do
+          let n' = fromInteger n
           l <- liftIO $ readIORef l'
-          case replaceAt l n v' of
-            Just newL -> liftIO (writeIORef l' newL) $> Unit
-            Nothing -> throwError "Tried to assign to out-of-rangee index"
+
+          if n' < 0 || n' >= V.length l
+          then throwError "Tried to assign to out-of-rangee index"
+          else
+            let newL = V.modify (\mv -> MV.write mv n' v') l
+            in liftIO (writeIORef l' newL) $> Unit
+
         _ -> throwError "Tried to assign to non-numeric index"
     Str _ -> throwError "Strings are immutable"
     _ -> throwError "Tried to assign an index in a non-list"
@@ -166,7 +174,7 @@ showEvalError ee
   | "User-thrown" `T.isPrefixOf` ee = ee
   | otherwise = "Runtime error: " <> ee
 
-evalWithComments :: Args -> [Comment] -> Expr -> ExceptT EvalError IO ([Comment], Val)
+evalWithComments :: Args -> Vector Comment -> Expr -> ExceptT EvalError IO (Vector Comment, Val)
 evalWithComments args comms expr = do
   commsVal@(List commsRef) <- pure $ toVal comms
   let argsVal = toVal args
@@ -174,5 +182,5 @@ evalWithComments args comms expr = do
   let vars = M.fromList [("args", argsVal), ("comments", commsVal)]
 
   v <- ExceptT $ first showEvalError <$> runEval (M.union vars intrinsics) (eval' expr)
-  newComms :: [Comment] <- liftIO $ (ofComm <$>) <$> readIORef commsRef
+  newComms :: Vector Comment <- liftIO $ (ofComm <$>) <$> readIORef commsRef
   pure (newComms, v)
