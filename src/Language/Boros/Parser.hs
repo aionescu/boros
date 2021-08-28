@@ -2,7 +2,7 @@ module Language.Boros.Parser(ws, unit, intRaw, boolRaw, charRaw, strRaw, list, r
 
 import Data.Foldable(foldl')
 import Data.Functor((<&>), ($>))
-import Data.List(nub)
+import qualified Data.Set as S
 import Data.Text(Text)
 import Data.Text qualified as T
 import Data.Vector(Vector)
@@ -106,16 +106,15 @@ simpleLit = choice [try strLit, try charLit, try numLit, boolLit]
 list :: (Vector a -> a) -> Parser a -> Parser a
 list mk el = parens '[' ']' $ mk . V.fromList <$> el `sepEndBy` comma
 
+unique :: String -> [(Ident, a)] -> Parser [(Ident, a)]
+unique lbl es
+  | S.size (S.fromList $ fst <$> es) == length es = pure es
+  | otherwise = fail $ lbl ++ " must be unique"
+
 rec' :: ([(Ident, a)] -> a) -> Parser a -> Parser a
-rec' mk el = mk <$> parens '{' '}' (unique =<< field `sepEndBy` comma)
+rec' mk el = mk <$> parens '{' '}' (unique "Record fields" =<< field `sepEndBy` comma)
   where
     field = (,) <$> (ident <* ws) <*> (equals *> el <* ws)
-    unique es =
-      let es' = fst <$> es
-      in
-        if nub es' == es'
-        then pure es
-        else fail "Fields in a record must be unique"
 
 varIdent :: Parser Text
 varIdent = notReserved =<< T.pack ... (:) <$> fstChar <*> many sndChar <* ws
@@ -155,7 +154,7 @@ unrollLam :: [Ident] -> Expr -> Expr
 unrollLam as e = foldr Lam e as
 
 lam :: Parser Expr
-lam = unrollLam <$> (many1 ident <* string "->" <* ws) <*> exprNoSeq
+lam = unrollLam <$> (many1 ident <* string "->" <* ws) <*> exprFull
 
 exprNoMember :: Parser Expr
 exprNoMember = choice (try <$> [if', lam, rec' RecLit expr, list ListLit expr, simpleLit, var, parensExpr]) <* ws
@@ -217,7 +216,7 @@ binding = unrollBinding <$> ident <*> many ident <*> (equals *> try exprFull <* 
     unrollBinding i is e = (i, unrollLam is e)
 
 bindingGroup :: Parser [(Ident, Expr)]
-bindingGroup = binding `sepBy` (string "and" *> ws)
+bindingGroup = unique "Bindings" =<< binding `sepBy1` (string "and" *> ws)
 
 let' :: Parser Expr
 let' =
