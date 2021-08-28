@@ -2,7 +2,7 @@ module Language.Boros.Eval(Args, evalWithComments) where
 
 import Control.Monad.Except(ExceptT(ExceptT), throwError, runExceptT, liftEither)
 import Control.Monad.IO.Class(MonadIO(liftIO))
-import Control.Monad.Reader(MonadReader(ask, local), ReaderT, asks, runReaderT)
+import Control.Monad.Reader(MonadReader(local), ReaderT, asks, runReaderT)
 import Data.Bifunctor(first)
 import Data.Functor(($>))
 import Data.IORef(IORef, newIORef, readIORef, writeIORef)
@@ -92,12 +92,10 @@ eval' (Let bs e) = do
       fs <- local (M.union fs) $ traverse eval' $ M.fromList bs
       local (M.union fs) $ eval' e
     else do
-      vs <- traverse eval' $ M.fromList bs
-      local (M.union vs) $ eval' e
+      vs <- traverse (traverse eval') bs
+      local (M.union $ M.fromList vs) $ eval' e
 
-eval' (Lam i e) = do
-  env <- ask
-  pure $ Fn \v -> runEval (M.insert i v env) $ eval' e
+eval' (Lam i e) = asks \env -> Fn \v -> runEval (M.insert i v env) $ eval' e
 
 eval' (App f a) = do
   f' <- eval' f
