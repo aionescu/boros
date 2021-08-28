@@ -10,7 +10,7 @@ if n == 100 then
   halt ();
 
 comments.[1] <- n + 1;
-comments.[2] <- comments.[3];
+comments.[2] <- b;
 comments.[3] <- a + b;
 
 a
