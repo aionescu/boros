@@ -2,7 +2,7 @@
 
 <img src="Assets/Ouroboros.png" width="150" height="150" />
 
-`boros` (Shortened from [Ouroboros](https://en.wikipedia.org/wiki/Ouroboros)) is a functional programming language that supports `first-class comments`, developed during the [2021 Lang Jam](https://github.com/langjam/jam0001).
+`boros` (Shortened from [Ouroboros](https://en.wikipedia.org/wiki/Ouroboros)) is a functional programming language developed during the [2021 Lang Jam](https://github.com/langjam/jam0001). The theme of the hackathon was [`first-class comments`](#first-class-comments).
 
 ## Build instructions
 
@@ -45,7 +45,7 @@ You can install it by running the `install-vscode-ext.sh` script.
 
 ### Syntax
 
-The entire `boros` script file is one big expression, so there's no need for a `main ()` function.
+The entire `boros` script file is one big expression, which is evaluated and printed by the interpreter. (If it evaluates to `()`, called *unit*, then nothing is printed)
 
 Variables and functions are declared with `let`, and multiple mutually-recursive functions can be declared with `let ... and`.
 
@@ -81,15 +81,17 @@ r.z <- 4; {- "You can even add new fields to an existing record!"; -}
 
 ### First-Class Comments
 
-`boros`  comments are delimited by `{-` and `-}`. Currently, there's no support for line comments or nested comments.
-
 In `boros`, comments *are interpreted as part of the source code*. (Can't get more first-class than that, right?)
 
-Furthermore, `boros` scripts have access to a value called `comments`, which contains the list of all comments in the source file.
+Furthermore, all comments are accessible (in text form) from within `boros` scripts via a *mutable* global list called `comments`.
 
-The script can modify this list, and when the script finishes, the comments *are replaced with the new values from the `comments` list*, and *the script is re-run*. This continues until either the script stops modifying the comments, or calls the `halt ()` function.
+When the script terminates, the comments *are replaced with the new strings from the `comments` list*, and *the script is re-run*. This continues until either the script stops modifying the comments, explicitly calls the `halt ()` function, or an exception is thrown.
 
 A good example of this can be found in the [Fibonacci](Examples/Fibonacci.brs) example.
+
+Comments are delimited by `{-` and `-}`. Currently, there's no support for line comments or nested comments.
+
+Scripts can also have a shebang (`#!`) on the first line, which is ignored by the interpreter, and is not accessible from within the script.
 
 ### Other bits of syntax
 
