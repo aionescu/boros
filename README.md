@@ -8,27 +8,27 @@
 
 ### Prerequisites
 
-* GHC (>= 8.10.5)
-* cabal (>= 3.4.0.0)
+* GHC (>= 9.0.1)
+* cabal (>= 3.6)
 
 (Can be installed via [ghcup](https://www.haskell.org/ghcup/))
 
 ### Build the interpreter
 
 ```sh
-cabal new-build
+cabal build
 ```
 
 ### Run the interpreter
 
 ```sh
-cabal new-run . -- <script file> <args for boros script>...
+cabal run . <script file> <args for boros script>
 ```
 
 e.g.
 
 ```sh
-cabal new-run . -- Examples/Factorial.brs 100
+cabal run . Examples/Factorial.brs 100
 ```
 
 ## VS Code Extension

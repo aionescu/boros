@@ -1,4 +1,4 @@
-cabal-version: 2.0
+cabal-version: 3.6
 
 name: boros
 version: 0.0.0.0
@@ -6,7 +6,7 @@ synopsis: Small programming language
 description: Please see the README on GitHub at <https://github.com/aionescu/boros#readme>
 homepage: https://github.com/aionescu/boros#readme
 bug-reports: https://github.com/aionescu/boros/issues
-license: GPL-3
+license: GPL-3.0-only
 license-file: LICENSE.txt
 maintainer: alxi.2001@gmail.com
 copyright: Copyright (C) 2021 Alex Ionescu
@@ -26,10 +26,6 @@ executable boros
     Language.Boros.FFI
     Language.Boros.Intrinsics
     Language.Boros.Eval
-    Paths_boros
-
-  autogen-modules:
-    Paths_boros
 
   hs-source-dirs: src
 
@@ -37,9 +33,7 @@ executable boros
     base >=4.14 && <5
     , containers ^>= 0.6.2
     , mtl ^>= 2.2.2
-    , optparse-applicative ^>= 0.16.1
     , parsec ^>= 3.1.14
-    , split ^>= 0.2.3
     , text ^>= 1.2.5
     , vector ^>= 0.12.3
 
@@ -49,6 +43,10 @@ executable boros
     -with-rtsopts=-N
     -Wall
     -Wincomplete-uni-patterns
+    -Wprepositive-qualified-module
+    -Wmissing-deriving-strategies
+    -Wunused-packages
+    -Wno-star-is-type
 
   default-extensions:
     ApplicativeDo

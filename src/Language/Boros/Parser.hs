@@ -2,7 +2,7 @@ module Language.Boros.Parser(ws, unit, intRaw, boolRaw, charRaw, strRaw, list, r
 
 import Data.Foldable(foldl')
 import Data.Functor((<&>), ($>))
-import qualified Data.Set as S
+import Data.Set qualified as S
 import Data.Text(Text)
 import Data.Text qualified as T
 import Data.Vector(Vector)
