@@ -1,41 +1,10 @@
-# boros
+<div align="center">
+  <h1>boros</h1>
 
-<img src="Assets/Ouroboros.png" width="150" height="150" />
+  <img src="Assets/Ouroboros.png" width="150" height="150" />
+</div>
 
 `boros` (Shortened from [Ouroboros](https://en.wikipedia.org/wiki/Ouroboros)) is a functional programming language developed during the [2021 Lang Jam](https://github.com/langjam/jam0001). The theme of the hackathon was [`first-class comments`](#first-class-comments).
-
-## Build instructions
-
-### Prerequisites
-
-* GHC (>= 9.0.1)
-* cabal (>= 3.6)
-
-(Can be installed via [ghcup](https://www.haskell.org/ghcup/))
-
-### Build the interpreter
-
-```sh
-cabal build
-```
-
-### Run the interpreter
-
-```sh
-cabal run . <script file> <args for boros script>
-```
-
-e.g.
-
-```sh
-cabal run . Examples/Factorial.brs 100
-```
-
-## VS Code Extension
-
-This repo also includes a VS Code extension for syntax highlighting.
-
-You can install it by running the `install-vscode-ext.sh` script.
 
 ## Language features
 
@@ -98,7 +67,7 @@ Scripts can also have a shebang (`#!`) on the first line, which is ignored by th
 #### Custom operators
 
 ```haskell
-{- "Save division"; -}
+{- "Safe division"; -}
 let (/?) a b =
   if b == 0 then
     0
@@ -136,11 +105,47 @@ factorial 100
 
 `boros` is dynamically-typed. Performing operations on values of the wrong type will halt the program with a `Runtime error`.
 
-You can use the `type` function to get the "kinda sorta" type of a value, e.g. `type 2 == "Num"`, `type [1, "abc"] == "List"`.
+You can use the `type` function to get the "approximate" type of a value, e.g. `type 2 == "Num"`, `type [1, "abc"] == "List"`.
 
 You can also throw exceptions using the `throw` function. Any value can be provided as parameter, and will be `show`n in the error message. There is currently no `catch`/`finally` mechanism.
+
+## VS Code Extension
+
+This repo also includes a VS Code extension for syntax highlighting.
+
+You can install it by running the `install-vscode-ext.sh` script.
+
+## Build instructions
+
+### Prerequisites
+
+* GHC (>= 9.0.1)
+* cabal (>= 3.6)
+
+(Can be installed via [ghcup](https://www.haskell.org/ghcup/))
+
+### Build the interpreter
+
+```sh
+cabal build
+```
+
+### Run the interpreter
+
+```sh
+cabal run . <script file> <args for boros script>
+```
+
+If not already built, `cabal run` will also build the project.
+
+e.g.
+
+```sh
+cabal run . Examples/Factorial.brs 100
+```
 
 ## License
 
 This repository is licensed under the terms of the GNU General Public License v3.
+
 For more details, see [the license file](LICENSE.txt).
