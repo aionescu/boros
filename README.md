@@ -4,7 +4,9 @@
   <img src="Assets/Ouroboros.png" width="150" height="150" />
 </div>
 
-`boros` (Shortened from [Ouroboros](https://en.wikipedia.org/wiki/Ouroboros)) is a functional programming language developed during the [2021 Lang Jam](https://github.com/langjam/jam0001). The theme of the hackathon was [`first-class comments`](#first-class-comments).
+`boros` (Shortened from [Ouroboros](https://en.wikipedia.org/wiki/Ouroboros)) is a language that allows you to write self-modifying programs.
+
+It was developed during the [2021 Lang Jam](https://github.com/langjam/jam0001). The theme of the hackathon was [`first-class comments`](#first-class-comments).
 
 ## Language features
 
